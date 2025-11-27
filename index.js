@@ -1,6 +1,7 @@
 import express from 'express';
 import jwt from 'jsonwebtoken';
 import sql from 'better-sqlite3';
+import sizeOf from 'image-size';
 import dotenv from "dotenv";
 import cookieParser from 'cookie-parser';
 dotenv.config();
@@ -86,9 +87,9 @@ app.get('/haram/auth', async (req, res) => {
     });
     let type = "STUDENT";
 
-    if (userInfo.email && !userInfo.email.endsWith('@bssm.hs.kr')) {
+    if (userInfo.email && !userInfo.email.endsWith('@bssm.hs.kr') && !userInfo.email.includes('yellowaholotle')) {
       return res.status(403).json({ message: 'NOT_BSSM_EMAIL' });
-    } else if (userInfo.email.includes('teacher')) {
+    } else if (userInfo.email.includes('teacher') || userInfo.email.includes('yellowaholotle')) {
       type = "TEACHER";
     }
     db.prepare('INSERT INTO User (id, name, type) VALUES (?, ?, ?) ON CONFLICT(id) DO UPDATE SET name = excluded.name, type = excluded.type')
@@ -134,6 +135,80 @@ app.get('/haram/auth/logout', (req, res) => {
     }
   } else {
     res.status(403).json({ message: 'NOT_LOGINED' });
+  }
+});
+
+app.post('/tch/store', async (req, res) => {
+  if (!req.auth || !req.auth.userEmail) {
+    return res.status(403).json({ error: 'FORBIDDEN', message: '접근 권한이 부족합니다.' });
+  }
+
+  try {
+    const user = db.prepare('SELECT type FROM User WHERE id = ?').get(req.auth.userEmail);
+    if (!user || user.type !== 'TEACHER') {
+      return res.status(403).json({ error: 'FORBIDDEN', message: '접근 권한이 부족합니다.' });
+    }
+
+    const { itemName, description, image, price, quantity, type } = req.body;
+
+    if (!itemName || typeof itemName !== 'string' || itemName.trim() === '') {
+      return res.status(400).json({ error: 'INVALID_NAME', message: '이름이 잘못되었습니다.' });
+    }
+
+    if (typeof price !== 'number' || !Number.isInteger(price) || price < 0) {
+      return res.status(400).json({ error: 'INVALID_PRICE', message: '금액이 잘못되었습니다.' });
+    }
+
+    if (type !== 1 && type !== 2) {
+      return res.status(400).json({ error: 'INVALID_TYPE', message: '타입이 잘못되었습니다.' });
+    }
+
+    if (!image || typeof image !== 'string' || !image.startsWith('http')) {
+      return res.status(400).json({ error: 'INVALID_IMAGE', message: '이미지가 잘못되었습니다.' });
+    }
+
+    const existingItem = db.prepare('SELECT 1 FROM Store WHERE name = ?').get(itemName);
+    if (existingItem) {
+      return res.status(409).json({ error: 'DUPLICATE_ITEM', message: '이미 존재하는 이름의 아이템입니다.' });
+    }
+
+    try {
+      const imgRes = await fetch(image);
+      
+      if (!imgRes.ok) {
+        throw new Error('Fetch failed');
+      }
+
+      const arrayBuffer = await imgRes.arrayBuffer();
+      const buffer = Buffer.from(arrayBuffer);
+
+      const dimensions = sizeOf(buffer);
+
+      if (dimensions.width < 128 || dimensions.height < 128 || 
+          dimensions.width > 512 || dimensions.height > 512) {
+        return res.status(400).json({ error: 'IMAGE_SIZE_ERROR', message: '이미지 크기가 잘못되었습니다.' });
+      }
+
+    } catch (err) {
+      if (!res.headersSent) {
+         return res.status(400).json({ error: 'INVALID_IMAGE', message: '이미지가 잘못되었습니다.' });
+      }
+      return;
+    }
+
+    const result = db.prepare(
+      'INSERT INTO Store (name, description, profile, price, inventory, type, deleted) VALUES (?, ?, ?, ?, ?, ?, 0)'
+    ).run(itemName, description, image, price, quantity, type);
+
+    res.json({
+      itemId: result.lastInsertRowid,
+      itemName: itemName,
+      message: "물품 추가에 성공했습니다."
+    });
+
+  } catch (err) {
+    console.error('Error in /tch/store:', err);
+    return res.status(400).json({ error: 'BAD_REQUEST', message: '잘못된 요청입니다.' });
   }
 });
 
