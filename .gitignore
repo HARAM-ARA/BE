@@ -146,3 +146,6 @@ data.db
 #macOS File
 .DS_Store
 ._*
+
+# IntelliJ IDEA
+.idea/
