@@ -1,4 +1,14 @@
 {
+  "name": "HARAM",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "start": "node index.js",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  },
   "dependencies": {
     "better-sqlite3": "^12.4.1",
     "cookie-parser": "^1.4.6",
@@ -6,7 +16,14 @@
     "express": "^4.18.2",
     "image-size": "^2.0.2",
     "index.js": "^0.0.3",
-    "jsonwebtoken": "^9.0.2"
+    "jsonwebtoken": "^9.0.2",
+    "multer": "^1.4.5-lts.1",
+    "xlsx": "^0.18.5"
   },
-  "type": "module"
+  "devDependencies": {
+    "eslint": "^9.39.1",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-prettier": "^5.5.4",
+    "prettier": "^3.7.3"
+  }
 }
