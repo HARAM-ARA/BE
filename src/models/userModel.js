@@ -13,6 +13,12 @@ export const userModel = {
     return stmt.get(id);
   },
 
+  findByUserNumber(userNumber) {
+    const db = getDatabase();
+    const stmt = db.prepare('SELECT * FROM users WHERE user_number = ?');
+    return stmt.get(userNumber);
+  },
+
   create(data) {
     const db = getDatabase();
     const stmt = db.prepare(`
