@@ -8,6 +8,7 @@ import {
 } from '../controllers/tchController.js';
 import { appendStudents, getTeam, addSingleStudent } from '../controllers/teamController.js';
 import { authenticateToken, requireTeacher } from '../middlewares/auth.js';
+import { upload } from '../config/multer.js';
 
 const router = express.Router();
 

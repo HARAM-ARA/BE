@@ -14,4 +14,5 @@ export const config = {
     clientSecret: process.env.GOOGLE_CLIENT_SECRET,
     redirectUri: process.env.GOOGLE_REDIRECT_URI || 'http://localhost:3000/haram/auth/callback',
   },
+  googleApiKey: process.env.GOOGLE_API_KEY,
 };
