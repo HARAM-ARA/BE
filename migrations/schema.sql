@@ -26,6 +26,7 @@ CREATE TABLE IF NOT EXISTS teams (
   team_number INTEGER NOT NULL,
   class_number INTEGER NOT NULL,
   name TEXT,
+  team_credit INTEGER DEFAULT 3000,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   UNIQUE(team_number, class_number)
