@@ -1,24 +1,40 @@
-import Database from 'better-sqlite3';
+import pg from 'pg';
 import { config } from '../config/index.js';
 
-let db;
+const { Pool } = pg;
+
+let pool;
 
 export function initDatabase() {
-  db = new Database(config.dbPath);
-  db.pragma('journal_mode = WAL');
-  return db;
+  pool = new Pool({
+    host: config.db.host,
+    port: config.db.port,
+    database: config.db.database,
+    user: config.db.user,
+    password: config.db.password,
+    max: 20,
+    idleTimeoutMillis: 30000,
+    connectionTimeoutMillis: 2000,
+  });
+
+  pool.on('error', (err) => {
+    console.error('Unexpected error on idle client', err);
+    process.exit(-1);
+  });
+
+  return pool;
 }
 
 export function getDatabase() {
-  if (!db) {
-    db = initDatabase();
+  if (!pool) {
+    pool = initDatabase();
   }
-  return db;
+  return pool;
 }
 
-export function closeDatabase() {
-  if (db) {
-    db.close();
-    db = null;
+export async function closeDatabase() {
+  if (pool) {
+    await pool.end();
+    pool = null;
   }
 }
