@@ -1,10 +1,12 @@
 import { getDatabase } from './db.js';
 
 export const teamModel = {
-  findByTeamNumber(teamNumber) {
+  findByTeamNumber(teamNumber, classNumber) {
     const db = getDatabase();
-    const stmt = db.prepare('SELECT * FROM teams WHERE team_number = ?');
-    return stmt.get(teamNumber);
+    const stmt = db.prepare(
+      'SELECT * FROM teams WHERE team_number = ? AND class_number = ?'
+    );
+    return stmt.get(teamNumber, classNumber);
   },
 
   findById(id) {
@@ -16,10 +18,14 @@ export const teamModel = {
   create(data) {
     const db = getDatabase();
     const stmt = db.prepare(`
-      INSERT INTO teams (team_number, class_number)
-      VALUES (?, ?)
+      INSERT INTO teams (team_number, class_number, name)
+      VALUES (?, ?, ?)
     `);
-    const result = stmt.run(data.teamNumber, data.classNumber);
+    const result = stmt.run(
+      data.teamNumber,
+      data.classNumber,
+      data.name || `Team ${data.teamNumber}`
+    );
     return result.lastInsertRowid;
   },
 
