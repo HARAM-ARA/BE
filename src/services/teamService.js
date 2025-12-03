@@ -1,11 +1,25 @@
 import { teamModel } from '../models/teamModel.js';
 import { userModel } from '../models/userModel.js';
 import { AppError } from '../middlewares/errorHandler.js';
-import { parseAndValidateTeamXlsx } from '../utils/xlsx.js';
+import { fetchGoogleSheetsData, validateRequiredColumns } from '../utils/googleSheets.js';
+import { config } from '../config/index.js';
 
 export const teamService = {
-  async appendStudentsFromXlsx(buffer) {
-    const students = parseAndValidateTeamXlsx(buffer);
+  async appendStudentsFromGoogleSheets(sheetUrl) {
+    // Fetch data from Google Sheets
+    const rawData = await fetchGoogleSheetsData(sheetUrl, config.googleApiKey);
+
+    // Validate required columns
+    validateRequiredColumns(rawData, ['TEAM_NUMBER', 'CLASS_NUMBER', 'NAME']);
+
+    // Transform data to expected format
+    const students = rawData
+      .filter(row => row.TEAM_NUMBER && row.CLASS_NUMBER && row.NAME)
+      .map(row => ({
+        teamNumber: parseInt(row.TEAM_NUMBER, 10),
+        classNumber: parseInt(row.CLASS_NUMBER, 10),
+        studentName: row.NAME.trim(),
+      }));
 
     const teamMap = new Map();
     const studentTeamMappings = [];

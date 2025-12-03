@@ -280,16 +280,16 @@ router.delete('/store/:id', authenticateToken, requireTeacher, deleteStore);
  *     requestBody:
  *       required: true
  *       content:
- *         multipart/form-data:
+ *         application/json:
  *           schema:
  *             type: object
  *             required:
- *               - file
+ *               - sheetUrl
  *             properties:
- *               file:
+ *               sheetUrl:
  *                 type: string
- *                 format: binary
- *                 description: 학생 팀 정보가 담긴 XLSX 파일 (TEAM_NUMBER, CLASS_NUMBER, NAME 컬럼 필수)
+ *                 description: 학생 팀 정보가 담긴 구글 시트 URL (TEAM_NUMBER, CLASS_NUMBER, NAME 컬럼 필수, 공유 설정 필요)
+ *                 example: https://docs.google.com/spreadsheets/d/1ABC123xyz/edit?usp=sharing
  *     responses:
  *       200:
  *         description: 학생 팀 정보 등록 성공
@@ -311,7 +311,7 @@ router.delete('/store/:id', authenticateToken, requireTeacher, deleteStore);
  *                       description: 총 등록된 학생 수
  *                       example: 25
  *       400:
- *         description: 파일 누락 또는 잘못된 요청
+ *         description: URL 누락 또는 잘못된 요청
  *         content:
  *           application/json:
  *             schema:
@@ -319,7 +319,7 @@ router.delete('/store/:id', authenticateToken, requireTeacher, deleteStore);
  *               properties:
  *                 error:
  *                   type: string
- *                   example: FILE_MISSING
+ *                   example: SHEET_URL_MISSING
  *       401:
  *         description: 인증 실패
  *         content:
@@ -327,7 +327,7 @@ router.delete('/store/:id', authenticateToken, requireTeacher, deleteStore);
  *             schema:
  *               $ref: '#/components/schemas/Error'
  *       403:
- *         description: 권한 없음 (교사만 가능)
+ *         description: 권한 없음 또는 구글 시트 접근 권한 오류
  *         content:
  *           application/json:
  *             schema:
@@ -336,8 +336,18 @@ router.delete('/store/:id', authenticateToken, requireTeacher, deleteStore);
  *                 error:
  *                   type: string
  *                   example: UNAUTHORIZED
+ *       404:
+ *         description: 구글 시트를 찾을 수 없음
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: 구글 시트를 찾을 수 없습니다
  *       409:
- *         description: 중복된 사용자 ID
+ *         description: 이미 팀에 배정된 학생
  *         content:
  *           application/json:
  *             schema:
@@ -345,19 +355,9 @@ router.delete('/store/:id', authenticateToken, requireTeacher, deleteStore);
  *               properties:
  *                 error:
  *                   type: string
- *                   example: DUPLICATE_USER_ID
- *       415:
- *         description: 지원하지 않는 파일 형식
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: string
- *                   example: UNSUPPORTED_FILE_TYPE
+ *                   example: 학생은 이미 팀에 배정되어 있습니다
  */
-router.post('/append', authenticateToken, requireTeacher, upload.single('file'), appendStudents);
+router.post('/append', authenticateToken, requireTeacher, appendStudents);
 
 /**
  * @swagger
