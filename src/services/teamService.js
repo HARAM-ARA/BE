@@ -125,4 +125,15 @@ export const teamService = {
       members,
     };
   },
+
+  getTeams() {
+    const teams = teamModel.getAllTeams();
+
+    // Transform to response format
+    return teams.map(team => ({
+      teamId: team.id,
+      teamName: team.name,
+      teamCredit: team.team_credit,
+    }));
+  },
 };
