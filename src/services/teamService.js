@@ -125,4 +125,58 @@ export const teamService = {
       members,
     };
   },
+
+  createTeam(teamName, studentUserIds) {
+    // Validate teamName length
+    if (!teamName || teamName.length < 1 || teamName.length > 10) {
+      throw new AppError('잘못된 요청입니다.', 400);
+    }
+
+    // Validate students array
+    if (!Array.isArray(studentUserIds) || studentUserIds.length === 0) {
+      throw new AppError('잘못된 요청입니다.', 400);
+    }
+
+    // Check if all elements are integers
+    if (!studentUserIds.every(id => Number.isInteger(id))) {
+      throw new AppError('잘못된 요청입니다.', 400);
+    }
+
+    // Check if team name already exists (case-insensitive)
+    const existingTeam = teamModel.findByName(teamName);
+    if (existingTeam) {
+      throw new AppError('이미 존재하는 팀이름 입니다.', 409);
+    }
+
+    // Find all students by user_number
+    const students = userModel.findByUserNumbers(studentUserIds);
+
+    // Check if all students exist
+    if (students.length !== studentUserIds.length) {
+      throw new AppError('존재하지 않는 아이디입니다.', 404);
+    }
+
+    // Check if any student is already in a team
+    const studentWithTeam = students.find(student => student.team_id !== null);
+    if (studentWithTeam) {
+      throw new AppError('이미 팀에 소속된 학생이 있습니다.', 409);
+    }
+
+    // Check if all users are students
+    const nonStudent = students.find(student => student.role !== 'student');
+    if (nonStudent) {
+      throw new AppError('존재하지 않는 아이디입니다.', 404);
+    }
+
+    // Create team
+    const teamId = teamModel.createTeam(teamName);
+
+    // Add students to team
+    const studentIds = students.map(s => s.id);
+    teamModel.addStudentsToTeam(studentIds, teamId);
+
+    return {
+      message: '팀 추가에 성공했습니다.',
+    };
+  },
 };

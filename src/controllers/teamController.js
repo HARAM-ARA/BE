@@ -60,3 +60,20 @@ export async function getTeam(req, res, next) {
     next(error);
   }
 }
+
+export async function createTeam(req, res, next) {
+  try {
+    const { teamName, students } = req.body;
+
+    // Validate required fields
+    if (!teamName || !students) {
+      return res.status(400).json({ error: '잘못된 요청입니다.' });
+    }
+
+    const result = teamService.createTeam(teamName, students);
+
+    res.status(200).json(result);
+  } catch (error) {
+    next(error);
+  }
+}
