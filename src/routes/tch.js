@@ -6,7 +6,7 @@ import {
   updateStore,
   deleteStore,
 } from '../controllers/tchController.js';
-import { appendStudents, getTeam, addSingleStudent } from '../controllers/teamController.js';
+import { appendStudents, getTeam, addSingleStudent, createTeam } from '../controllers/teamController.js';
 import { getAllStudents } from '../controllers/userController.js';
 import { authenticateToken, requireTeacher } from '../middlewares/auth.js';
 import { upload } from '../config/multer.js';
@@ -563,5 +563,99 @@ router.post('/student/assign', authenticateToken, requireTeacher, addSingleStude
  *               $ref: '#/components/schemas/Error'
  */
 router.get('/team/:id', getTeam);
+
+/**
+ * @swagger
+ * /tch/team:
+ *   post:
+ *     summary: 팀 단일 추가 (교사 전용)
+ *     tags: [Team]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - teamName
+ *               - students
+ *             properties:
+ *               teamName:
+ *                 type: string
+ *                 minLength: 1
+ *                 maxLength: 10
+ *                 description: 팀 이름 (1~10자, 대소문자 구분 없이 중복 불가)
+ *                 example: 하람
+ *               students:
+ *                 type: array
+ *                 items:
+ *                   type: integer
+ *                 description: 팀에 추가할 학생들의 userId (학번) 배열
+ *                 example: [1, 2, 3, 4]
+ *     responses:
+ *       200:
+ *         description: 팀 추가에 성공했습니다
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: 팀 추가에 성공했습니다.
+ *       400:
+ *         description: 잘못된 요청입니다
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: 잘못된 요청입니다.
+ *       401:
+ *         description: 토큰 누락 또는 무효
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: 토큰이 누락됐습니다.
+ *       403:
+ *         description: 권한이 부족합니다
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: 권한이 부족합니다.
+ *       404:
+ *         description: 존재하지 않는 아이디입니다
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: 존재하지 않는 아이디입니다.
+ *       409:
+ *         description: 이미 존재하는 팀이름 또는 팀에 소속된 학생
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: 이미 존재하는 팀이름 입니다.
+ */
+router.post('/team', authenticateToken, requireTeacher, createTeam);
 
 export default router;

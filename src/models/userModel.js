@@ -54,4 +54,16 @@ export const userModel = {
     `);
     return stmt.all();
   },
+
+  findByUserNumbers(userNumbers) {
+    const db = getDatabase();
+    const placeholders = userNumbers.map(() => '?').join(',');
+    const stmt = db.prepare(`
+      SELECT u.id, u.user_number, u.name, u.role, st.team_id
+      FROM users u
+      LEFT JOIN student_teams st ON u.id = st.student_id
+      WHERE u.user_number IN (${placeholders})
+    `);
+    return stmt.all(...userNumbers);
+  },
 };
