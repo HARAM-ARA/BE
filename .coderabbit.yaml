@@ -1,5 +1,7 @@
 language: "ko"
+
 early_access: false
+
 reviews:
   profile: "chill"
   request_changes_workflow: false
@@ -7,12 +9,16 @@ reviews:
   poem: false
   review_status: true
   collapse_walkthrough: false
-  auto_review:
+  enable_on_default_branch_only: false   # ← 추가!
+
+auto_review:
+  enabled: true
+  drafts: false
+
+tools:
+  github-checks:
     enabled: true
-    drafts: false
-  tools:
-    github-checks:
-      enabled: true
-      timeout: 90
+    timeout: 90
+
 chat:
   auto_reply: true
