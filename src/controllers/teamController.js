@@ -31,20 +31,12 @@ export async function addSingleStudent(req, res, next) {
 
     // Validate required fields
     if (!userNumber || !name || !teamId) {
-      throw new AppError('필수 항목이 누락되었습니다. userNumber, name, teamId를 모두 입력해주세요.', 400);
+      return res.status(400).json({ error: '요청 형식이 올바르지 않습니다.' });
     }
 
     // Validate types
-    if (typeof userNumber !== 'string') {
-      throw new AppError('userNumber는 문자열이어야 합니다', 400);
-    }
-
-    if (typeof name !== 'string') {
-      throw new AppError('name은 문자열이어야 합니다', 400);
-    }
-
-    if (typeof teamId !== 'number') {
-      throw new AppError('teamId는 숫자여야 합니다', 400);
+    if (typeof userNumber !== 'string' || typeof name !== 'string' || typeof teamId !== 'number') {
+      return res.status(400).json({ error: '요청 형식이 올바르지 않습니다.' });
     }
 
     const result = teamService.addSingleStudent(userNumber, name, teamId);

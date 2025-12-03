@@ -385,35 +385,55 @@ router.post('/append', authenticateToken, requireTeacher, appendStudents);
  *                   type: string
  *                   example: 학생이 성공적으로 추가되었습니다.
  *       400:
- *         description: 잘못된 요청 (필수 항목 누락 또는 타입 오류)
+ *         description: 요청 형식이 올바르지 않습니다
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/Error'
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: 요청 형식이 올바르지 않습니다.
  *       401:
- *         description: 인증 실패 (Authorization 헤더 없음)
+ *         description: 토큰이 누락됐습니다
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/Error'
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: 토큰이 누락됐습니다.
  *       403:
- *         description: 권한 없음 (교사 권한 필요)
+ *         description: 권한이 부족합니다
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/Error'
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: 권한이 부족합니다.
  *       404:
- *         description: 팀 또는 학생을 찾을 수 없음
+ *         description: 해당 팀은 존재하지 않습니다
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/Error'
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: 해당 팀은 존재하지 않습니다.
  *       409:
- *         description: 이미 팀에 배정된 학생 (중복)
+ *         description: 이미 존재하는 학생입니다
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/Error'
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: 이미 존재하는 학생입니다.
  */
 router.post('/student/assign', authenticateToken, requireTeacher, addSingleStudent);
 

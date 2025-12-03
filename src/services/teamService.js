@@ -71,50 +71,37 @@ export const teamService = {
   },
 
   addSingleStudent(userNumber, name, teamId) {
-    // Validate inputs
-    if (!userNumber || typeof userNumber !== 'string') {
-      throw new AppError('유효하지 않은 학생 번호입니다', 400);
-    }
-
-    if (!name || typeof name !== 'string') {
-      throw new AppError('유효하지 않은 학생 이름입니다', 400);
-    }
-
-    if (!teamId || typeof teamId !== 'number') {
-      throw new AppError('유효하지 않은 팀 ID입니다', 400);
-    }
-
     // Check if team exists
     const team = teamModel.findById(teamId);
     if (!team) {
-      throw new AppError('팀을 찾을 수 없습니다', 404);
+      throw new AppError('해당 팀은 존재하지 않습니다.', 404);
     }
 
     // Find student by userNumber
     const student = userModel.findByUserNumber(userNumber);
     if (!student) {
-      throw new AppError('학생을 찾을 수 없습니다', 404);
+      throw new AppError('해당 팀은 존재하지 않습니다.', 404);
     }
 
     // Verify student role
     if (student.role !== 'student') {
-      throw new AppError('학생 권한이 없는 사용자입니다', 400);
+      throw new AppError('요청 형식이 올바르지 않습니다.', 400);
     }
 
     // Verify name matches
     if (student.name !== name) {
-      throw new AppError('학생 이름이 일치하지 않습니다', 400);
+      throw new AppError('요청 형식이 올바르지 않습니다.', 400);
     }
 
     // Check if student is already in this team
     if (teamModel.isStudentInTeam(student.id, teamId)) {
-      throw new AppError('이미 해당 팀에 배정된 학생입니다', 409);
+      throw new AppError('이미 존재하는 학생입니다.', 409);
     }
 
     // Check if student is already in another team
     const existingTeam = teamModel.findStudentTeam(student.id);
     if (existingTeam) {
-      throw new AppError('학생은 이미 다른 팀에 배정되어 있습니다', 409);
+      throw new AppError('이미 존재하는 학생입니다.', 409);
     }
 
     // Assign student to team
