@@ -38,4 +38,20 @@ export const userModel = {
     `);
     return stmt.run(data.name, data.role, id);
   },
+
+  getAllStudents() {
+    const db = getDatabase();
+    const stmt = db.prepare(`
+      SELECT
+        u.id,
+        u.user_number as userId,
+        u.name,
+        st.team_id as teamId
+      FROM users u
+      LEFT JOIN student_teams st ON u.id = st.student_id
+      WHERE u.role = 'student'
+      ORDER BY u.user_number
+    `);
+    return stmt.all();
+  },
 };
