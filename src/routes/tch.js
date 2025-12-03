@@ -7,6 +7,7 @@ import {
   deleteStore,
 } from '../controllers/tchController.js';
 import { appendStudents, getTeam, addSingleStudent } from '../controllers/teamController.js';
+import { getAllStudents } from '../controllers/userController.js';
 import { authenticateToken, requireTeacher } from '../middlewares/auth.js';
 import { upload } from '../config/multer.js';
 
@@ -268,6 +269,76 @@ router.put('/store/:id', authenticateToken, requireTeacher, updateStore);
  *               $ref: '#/components/schemas/Error'
  */
 router.delete('/store/:id', authenticateToken, requireTeacher, deleteStore);
+
+/**
+ * @swagger
+ * /tch/student:
+ *   get:
+ *     summary: 학생 전체 조회 (교사 전용)
+ *     tags: [Student]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: 학생 전체 조회 성공
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: 학생 전체 조회 성공
+ *                 students:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       userId:
+ *                         type: integer
+ *                         description: 학생 학번
+ *                         example: 1201
+ *                       name:
+ *                         type: string
+ *                         description: 학생 이름
+ *                         example: 강태은
+ *                       teamId:
+ *                         type: integer
+ *                         nullable: true
+ *                         description: 팀 ID (배정되지 않은 경우 null)
+ *                         example: 3
+ *       400:
+ *         description: 잘못된 요청입니다
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: 잘못된 요청입니다.
+ *       401:
+ *         description: 토큰이 누락됐습니다
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: 토큰이 누락됐습니다.
+ *       403:
+ *         description: 권한이 부족합니다
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: 권한이 부족합니다.
+ */
+router.get('/student', authenticateToken, requireTeacher, getAllStudents);
 
 /**
  * @swagger
