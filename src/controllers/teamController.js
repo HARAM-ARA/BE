@@ -77,3 +77,15 @@ export async function createTeam(req, res, next) {
     next(error);
   }
 }
+
+export async function getTeams(req, res, next) {
+  try {
+    const teams = teamService.getTeams();
+
+    res.status(200).json({
+      teams,
+    });
+  } catch (error) {
+    next(error);
+  }
+}

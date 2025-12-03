@@ -98,8 +98,8 @@ export const teamModel = {
   createTeam(teamName) {
     const db = getDatabase();
     const stmt = db.prepare(`
-      INSERT INTO teams (name, team_number, class_number)
-      VALUES (?, 0, 0)
+      INSERT INTO teams (name, team_number, class_number, team_credit)
+      VALUES (?, 0, 0, 3000)
     `);
     const result = stmt.run(teamName);
     return result.lastInsertRowid;
@@ -117,5 +117,15 @@ export const teamModel = {
       }
     });
     return transaction(studentIds);
+  },
+
+  getAllTeams() {
+    const db = getDatabase();
+    const stmt = db.prepare(`
+      SELECT id, name, team_credit
+      FROM teams
+      ORDER BY id ASC
+    `);
+    return stmt.all();
   },
 };
