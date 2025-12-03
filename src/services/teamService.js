@@ -47,7 +47,7 @@ export const teamService = {
       if (teamMap.has(teamKey)) {
         teamId = teamMap.get(teamKey);
       } else {
-        let team = teamModel.findByTeamNumber(teamNumber);
+        let team = teamModel.findByTeamNumber(teamNumber, classNumber);
         if (!team) {
           teamId = teamModel.create({ teamNumber, classNumber });
         } else {
@@ -67,6 +67,48 @@ export const teamService = {
     return {
       message: '학생 팀 정보가 성공적으로 등록되었습니다',
       sumStudent: studentTeamMappings.length,
+    };
+  },
+
+  addSingleStudent(userNumber, name, teamId) {
+    // Check if team exists
+    const team = teamModel.findById(teamId);
+    if (!team) {
+      throw new AppError('해당 팀은 존재하지 않습니다.', 404);
+    }
+
+    // Find student by userNumber
+    const student = userModel.findByUserNumber(userNumber);
+    if (!student) {
+      throw new AppError('해당 팀은 존재하지 않습니다.', 404);
+    }
+
+    // Verify student role
+    if (student.role !== 'student') {
+      throw new AppError('요청 형식이 올바르지 않습니다.', 400);
+    }
+
+    // Verify name matches
+    if (student.name !== name) {
+      throw new AppError('요청 형식이 올바르지 않습니다.', 400);
+    }
+
+    // Check if student is already in this team
+    if (teamModel.isStudentInTeam(student.id, teamId)) {
+      throw new AppError('이미 존재하는 학생입니다.', 409);
+    }
+
+    // Check if student is already in another team
+    const existingTeam = teamModel.findStudentTeam(student.id);
+    if (existingTeam) {
+      throw new AppError('이미 존재하는 학생입니다.', 409);
+    }
+
+    // Assign student to team
+    teamModel.assignStudentToTeam(student.id, teamId);
+
+    return {
+      message: '학생이 성공적으로 추가되었습니다.',
     };
   },
 

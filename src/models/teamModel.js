@@ -68,4 +68,24 @@ export const teamModel = {
     `);
     return stmt.all(teamId);
   },
+
+  isStudentInTeam(studentId, teamId) {
+    const db = getDatabase();
+    const stmt = db.prepare(`
+      SELECT COUNT(*) as count
+      FROM student_teams
+      WHERE student_id = ? AND team_id = ?
+    `);
+    const result = stmt.get(studentId, teamId);
+    return result.count > 0;
+  },
+
+  assignStudentToTeam(studentId, teamId) {
+    const db = getDatabase();
+    const stmt = db.prepare(`
+      INSERT INTO student_teams (student_id, team_id)
+      VALUES (?, ?)
+    `);
+    return stmt.run(studentId, teamId);
+  },
 };

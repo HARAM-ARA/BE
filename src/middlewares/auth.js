@@ -7,7 +7,7 @@ export function authenticateToken(req, res, next) {
   const token = authHeader && authHeader.split(' ')[1];
 
   if (!token) {
-    return res.status(401).json({ error: 'Access token required' });
+    return res.status(401).json({ error: '토큰이 누락됐습니다.' });
   }
 
   try {
@@ -15,17 +15,17 @@ export function authenticateToken(req, res, next) {
     req.user = decoded;
     next();
   } catch (error) {
-    return res.status(403).json({ error: 'Invalid or expired token' });
+    return res.status(403).json({ error: '권한이 부족합니다.' });
   }
 }
 
 export function requireTeacher(req, res, next) {
   if (!req.user) {
-    return res.status(401).json({ error: 'Authentication required' });
+    return res.status(401).json({ error: '토큰이 누락됐습니다.' });
   }
 
   if (req.user.role !== 'teacher') {
-    return res.status(403).json({ error: 'Teacher access required' });
+    return res.status(403).json({ error: '권한이 부족합니다.' });
   }
 
   next();
@@ -33,11 +33,11 @@ export function requireTeacher(req, res, next) {
 
 export function requireStudent(req, res, next) {
   if (!req.user) {
-    return res.status(401).json({ error: 'Authentication required' });
+    return res.status(401).json({ error: '토큰이 누락됐습니다.' });
   }
 
   if (req.user.role !== 'student') {
-    return res.status(403).json({ error: 'Student access required' });
+    return res.status(403).json({ error: '권한이 부족합니다.' });
   }
 
   next();

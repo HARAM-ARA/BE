@@ -25,6 +25,28 @@ export async function appendStudents(req, res, next) {
   }
 }
 
+export async function addSingleStudent(req, res, next) {
+  try {
+    const { userNumber, name, teamId } = req.body;
+
+    // Validate required fields
+    if (!userNumber || !name || !teamId) {
+      return res.status(400).json({ error: '요청 형식이 올바르지 않습니다.' });
+    }
+
+    // Validate types
+    if (typeof userNumber !== 'string' || typeof name !== 'string' || typeof teamId !== 'number') {
+      return res.status(400).json({ error: '요청 형식이 올바르지 않습니다.' });
+    }
+
+    const result = teamService.addSingleStudent(userNumber, name, teamId);
+
+    res.status(200).json(result);
+  } catch (error) {
+    next(error);
+  }
+}
+
 export async function getTeam(req, res, next) {
   try {
     const { id } = req.params;

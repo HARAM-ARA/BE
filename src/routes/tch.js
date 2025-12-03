@@ -6,7 +6,7 @@ import {
   updateStore,
   deleteStore,
 } from '../controllers/tchController.js';
-import { appendStudents, getTeam } from '../controllers/teamController.js';
+import { appendStudents, getTeam, addSingleStudent } from '../controllers/teamController.js';
 import { authenticateToken, requireTeacher } from '../middlewares/auth.js';
 import { upload } from '../config/multer.js';
 
@@ -273,7 +273,7 @@ router.delete('/store/:id', authenticateToken, requireTeacher, deleteStore);
  * @swagger
  * /tch/append:
  *   post:
- *     summary: 학생 팀 정보 일괄 등록 (교사 전용)
+ *     summary: 학생 팀 정보 일괄 등록 (교사 전용, 구글 시트)
  *     tags: [Team]
  *     security:
  *       - bearerAuth: []
@@ -315,11 +315,7 @@ router.delete('/store/:id', authenticateToken, requireTeacher, deleteStore);
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: string
- *                   example: SHEET_URL_MISSING
+ *               $ref: '#/components/schemas/Error'
  *       401:
  *         description: 인증 실패
  *         content:
@@ -331,23 +327,66 @@ router.delete('/store/:id', authenticateToken, requireTeacher, deleteStore);
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: string
- *                   example: UNAUTHORIZED
+ *               $ref: '#/components/schemas/Error'
  *       404:
  *         description: 구글 시트를 찾을 수 없음
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: string
- *                   example: 구글 시트를 찾을 수 없습니다
+ *               $ref: '#/components/schemas/Error'
  *       409:
  *         description: 이미 팀에 배정된 학생
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
+router.post('/append', authenticateToken, requireTeacher, appendStudents);
+
+/**
+ * @swagger
+ * /tch/student/assign:
+ *   post:
+ *     summary: 단일 학생 팀 배정 (교사 전용)
+ *     tags: [Team]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - userNumber
+ *               - name
+ *               - teamId
+ *             properties:
+ *               userNumber:
+ *                 type: string
+ *                 description: 학생 번호
+ *                 example: "20240001"
+ *               name:
+ *                 type: string
+ *                 description: 학생 이름
+ *                 example: 홍길동
+ *               teamId:
+ *                 type: integer
+ *                 description: 팀 ID
+ *                 example: 1
+ *     responses:
+ *       200:
+ *         description: 학생이 성공적으로 추가되었습니다
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: 학생이 성공적으로 추가되었습니다.
+ *       400:
+ *         description: 요청 형식이 올바르지 않습니다
  *         content:
  *           application/json:
  *             schema:
@@ -355,9 +394,49 @@ router.delete('/store/:id', authenticateToken, requireTeacher, deleteStore);
  *               properties:
  *                 error:
  *                   type: string
- *                   example: 학생은 이미 팀에 배정되어 있습니다
+ *                   example: 요청 형식이 올바르지 않습니다.
+ *       401:
+ *         description: 토큰이 누락됐습니다
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: 토큰이 누락됐습니다.
+ *       403:
+ *         description: 권한이 부족합니다
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: 권한이 부족합니다.
+ *       404:
+ *         description: 해당 팀은 존재하지 않습니다
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: 해당 팀은 존재하지 않습니다.
+ *       409:
+ *         description: 이미 존재하는 학생입니다
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: 이미 존재하는 학생입니다.
  */
-router.post('/append', authenticateToken, requireTeacher, appendStudents);
+router.post('/student/assign', authenticateToken, requireTeacher, addSingleStudent);
 
 /**
  * @swagger
