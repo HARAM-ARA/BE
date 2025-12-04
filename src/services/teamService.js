@@ -135,6 +135,8 @@ export const teamService = {
       teamName: team.name,
       teamCredit: team.team_credit,
     }));
+  },
+
   createTeam(teamName, studentUserIds) {
     // Validate teamName length
     if (!teamName || teamName.length < 1 || teamName.length > 10) {

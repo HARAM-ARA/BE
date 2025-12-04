@@ -85,15 +85,23 @@ app.get('/haram/auth', async (req, res) => {
       sameSite: 'lax',
       maxAge: JWT_EXPIRES_MS
     });
-    let type = "STUDENT";
+    let role = "student";
 
     if (userInfo.email && !userInfo.email.endsWith('@bssm.hs.kr') && !userInfo.email.includes('yellowaholotle')) {
       return res.status(403).json({ message: 'NOT_BSSM_EMAIL' });
     } else if (userInfo.email.includes('teacher') || userInfo.email.includes('yellowaholotle')) {
-      type = "TEACHER";
+      role = "teacher";
     }
-    db.prepare('INSERT INTO User (id, name, type) VALUES (?, ?, ?) ON CONFLICT(id) DO UPDATE SET name = excluded.name, type = excluded.type')
-      .run(userInfo.email, userInfo.name, type);
+
+    // Check if user exists to get ID, or insert
+    const existingUser = db.prepare('SELECT * FROM users WHERE email = ?').get(userInfo.email);
+    if (existingUser) {
+      db.prepare('UPDATE users SET name = ?, role = ? WHERE email = ?')
+        .run(userInfo.name, role, userInfo.email);
+    } else {
+      db.prepare('INSERT INTO users (email, name, role, google_id) VALUES (?, ?, ?, ?)')
+        .run(userInfo.email, userInfo.name, role, userInfo.id);
+    }
     res.redirect('/');
   } catch (err) {
     console.error('Error in /haram/auth:', err);
@@ -125,13 +133,13 @@ app.get('/haram/auth/login', (req, res) => {
 app.get('/haram/auth/logout', (req, res) => {
   if (req.auth && req.auth.token) {
     try {
-        const cookieOptions = { httpOnly: true, sameSite: 'lax' };
-        if (process.env.NODE_ENV === 'production') cookieOptions.secure = true;
-        res.clearCookie('auth', cookieOptions);
-        res.json({ message: 'LOGOUT_SUCCESS' });
+      const cookieOptions = { httpOnly: true, sameSite: 'lax' };
+      if (process.env.NODE_ENV === 'production') cookieOptions.secure = true;
+      res.clearCookie('auth', cookieOptions);
+      res.json({ message: 'LOGOUT_SUCCESS' });
     } catch (err) {
-        console.error('Error in /haram/auth/logout:', err);
-        res.status(500).json({ message: 'LOGOUT_FAILED' });
+      console.error('Error in /haram/auth/logout:', err);
+      res.status(500).json({ message: 'LOGOUT_FAILED' });
     }
   } else {
     res.status(403).json({ message: 'NOT_LOGINED' });
@@ -144,8 +152,8 @@ app.post('/tch/store', async (req, res) => {
   }
 
   try {
-    const user = db.prepare('SELECT type FROM User WHERE id = ?').get(req.auth.userEmail);
-    if (!user || user.type !== 'TEACHER') {
+    const user = db.prepare('SELECT role FROM users WHERE email = ?').get(req.auth.userEmail);
+    if (!user || user.role !== 'teacher') {
       return res.status(403).json({ error: 'FORBIDDEN', message: '접근 권한이 부족합니다.' });
     }
 
@@ -167,14 +175,14 @@ app.post('/tch/store', async (req, res) => {
       return res.status(400).json({ error: 'INVALID_IMAGE', message: '이미지가 잘못되었습니다.' });
     }
 
-    const existingItem = db.prepare('SELECT 1 FROM Store WHERE name = ?').get(itemName);
+    const existingItem = db.prepare('SELECT 1 FROM stores WHERE name = ?').get(itemName);
     if (existingItem) {
       return res.status(409).json({ error: 'DUPLICATE_ITEM', message: '이미 존재하는 이름의 아이템입니다.' });
     }
 
     try {
       const imgRes = await fetch(image);
-      
+
       if (!imgRes.ok) {
         throw new Error('Fetch failed');
       }
@@ -184,21 +192,29 @@ app.post('/tch/store', async (req, res) => {
 
       const dimensions = sizeOf(buffer);
 
-      if (dimensions.width < 128 || dimensions.height < 128 || 
-          dimensions.width > 512 || dimensions.height > 512) {
+      if (dimensions.width < 128 || dimensions.height < 128 ||
+        dimensions.width > 512 || dimensions.height > 512) {
         return res.status(400).json({ error: 'IMAGE_SIZE_ERROR', message: '이미지 크기가 잘못되었습니다.' });
       }
 
     } catch (err) {
       if (!res.headersSent) {
-         return res.status(400).json({ error: 'INVALID_IMAGE', message: '이미지가 잘못되었습니다.' });
+        return res.status(400).json({ error: 'INVALID_IMAGE', message: '이미지가 잘못되었습니다.' });
       }
       return;
     }
 
+    // Note: schema.sql stores table has: name, price, quantity, image_url, teacher_id
+    // It does not have description, type, deleted. I will insert what fits.
+    // Also need teacher_id. I need to get the user ID first.
+    const teacher = db.prepare('SELECT id FROM users WHERE email = ?').get(req.auth.userEmail);
+    if (!teacher) {
+        return res.status(403).json({ error: 'FORBIDDEN', message: '접근 권한이 부족합니다.' });
+    }
+
     const result = db.prepare(
-      'INSERT INTO Store (name, description, profile, price, inventory, type, deleted) VALUES (?, ?, ?, ?, ?, ?, 0)'
-    ).run(itemName, description, image, price, quantity, type);
+      'INSERT INTO stores (name, price, quantity, image_url, teacher_id) VALUES (?, ?, ?, ?, ?)'
+    ).run(itemName, price, quantity, image, teacher.id);
 
     res.json({
       itemId: result.lastInsertRowid,
@@ -212,10 +228,10 @@ app.post('/tch/store', async (req, res) => {
   }
 });
 
-app.use(function(req, res, next) {
+app.use(function (req, res, next) {
   res.status(404).json({ message: 'NOT_FOUND' });
 });
 
 app.listen(PORT, () => {
-	console.log(`Listening at http://localhost:${PORT}`);
+  console.log(`Listening at http://localhost:${PORT}`);
 });

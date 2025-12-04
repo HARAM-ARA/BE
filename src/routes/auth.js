@@ -1,8 +1,12 @@
 import express from 'express';
-import { login, getProfile, logout } from '../controllers/authController.js';
+import { login, getProfile, logout, handleCallback } from '../controllers/authController.js';
 import { authenticateToken } from '../middlewares/auth.js';
+import { config } from '../config/index.js';
 
 const router = express.Router();
+
+// OAuth callback handler - must be before other routes
+router.get('/', handleCallback);
 
 /**
  * @swagger
@@ -48,6 +52,23 @@ const router = express.Router();
  *               $ref: '#/components/schemas/Error'
  */
 router.post('/login', login);
+
+router.get('/login', (req, res) => {
+    const GOOGLE_CLIENT_ID = config.google.clientId;
+    const REDIRECT_URI = config.google.redirectUri;
+
+    const params = new URLSearchParams({
+        client_id: GOOGLE_CLIENT_ID,
+        redirect_uri: REDIRECT_URI,
+        response_type: 'code',
+        scope: 'openid email profile',
+        access_type: 'offline',
+        prompt: 'consent'
+    });
+
+    const authURL = `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;
+    res.json({ authURL });
+});
 
 /**
  * @swagger
