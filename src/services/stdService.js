@@ -122,6 +122,7 @@ export const stdService = {
 
             case 'swap':
                 // 크레딧 교환 - 프론트엔드에서 팀 선택 필요
+                teamModel.grantSwapPermission(teamId); // 권한 부여
                 message = '크레딧 교환하기!!';
                 effect = 'swap';
                 return { message, effect };
@@ -180,5 +181,56 @@ export const stdService = {
             }
         }
         return 10;
+    },
+
+    async swapCredit(user, targetTeamId) {
+        // 1. 입력 유효성 검사
+        if (!targetTeamId || typeof targetTeamId !== 'number') {
+            throw { status: 400, message: 'ID가 잘못되었습니다', code: 'INCORRECT_TEAM' };
+        }
+
+        // 2. 학생의 팀 정보 조회
+        const studentTeam = teamModel.findStudentTeam(user.id);
+        if (!studentTeam) {
+            throw { status: 403, message: '팀에 소속되어 있지 않습니다.' };
+        }
+        const myTeamId = studentTeam.team_id;
+
+        // 3. swap 권한 확인
+        if (!teamModel.hasSwapPermission(myTeamId)) {
+            throw { status: 403, message: '크레딧 교환 권한이 없습니다', code: 'NO_PERMISSION' };
+        }
+
+        // 4. 자기 자신과 교환 방지
+        if (myTeamId === targetTeamId) {
+            throw { status: 400, message: '자기 팀과는 교환할 수 없습니다', code: 'INCORRECT_TEAM' };
+        }
+
+        // 5. 대상 팀 존재 확인
+        const targetTeam = teamModel.findById(targetTeamId);
+        if (!targetTeam) {
+            throw { status: 404, message: '존재하지 않는 팀입니다', code: 'NON_EXIST_TEAM' };
+        }
+
+        // 6. 크레딧 교환 실행 및 권한 제거 (트랜잭션)
+        const db = getDatabase();
+        let result;
+        const transaction = db.transaction(() => {
+            result = teamModel.swapTeamCredits(myTeamId, targetTeamId);
+            teamModel.revokeSwapPermission(myTeamId);
+        });
+        transaction();
+
+        return {
+            message: '선택한 팀과 크레딧이 교환되었습니다.',
+            myTeam: {
+                teamId: result.team1.id,
+                credit: result.team1.credit
+            },
+            targetTeam: {
+                teamId: result.team2.id,
+                credit: result.team2.credit
+            }
+        };
     }
 };

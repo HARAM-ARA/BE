@@ -128,4 +128,68 @@ export const teamModel = {
     `);
     return stmt.all();
   },
+
+  updateTeamCredit(teamId, credit) {
+    const db = getDatabase();
+    const stmt = db.prepare(`
+      UPDATE teams
+      SET team_credit = ?
+      WHERE id = ?
+    `);
+    return stmt.run(credit, teamId);
+  },
+
+  swapTeamCredits(teamId1, teamId2) {
+    const db = getDatabase();
+    const transaction = db.transaction(() => {
+      const selectStmt = db.prepare('SELECT id, team_credit FROM teams WHERE id = ?');
+      const team1 = selectStmt.get(teamId1);
+      const team2 = selectStmt.get(teamId2);
+
+      if (!team1 || !team2) {
+        throw new Error('One or both teams not found');
+      }
+
+      const updateStmt = db.prepare('UPDATE teams SET team_credit = ? WHERE id = ?');
+      updateStmt.run(team2.team_credit, teamId1);
+      updateStmt.run(team1.team_credit, teamId2);
+
+      return {
+        team1: { id: team1.id, credit: team2.team_credit },
+        team2: { id: team2.id, credit: team1.team_credit }
+      };
+    });
+    return transaction();
+  },
+
+  grantSwapPermission(teamId) {
+    const db = getDatabase();
+    const stmt = db.prepare(`
+      UPDATE teams
+      SET has_swap_permission = 1
+      WHERE id = ?
+    `);
+    return stmt.run(teamId);
+  },
+
+  hasSwapPermission(teamId) {
+    const db = getDatabase();
+    const stmt = db.prepare(`
+      SELECT has_swap_permission
+      FROM teams
+      WHERE id = ?
+    `);
+    const result = stmt.get(teamId);
+    return result && result.has_swap_permission === 1;
+  },
+
+  revokeSwapPermission(teamId) {
+    const db = getDatabase();
+    const stmt = db.prepare(`
+      UPDATE teams
+      SET has_swap_permission = 0
+      WHERE id = ?
+    `);
+    return stmt.run(teamId);
+  },
 };
