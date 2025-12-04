@@ -3,8 +3,14 @@ import { config } from '../config/index.js';
 import { userModel } from '../models/userModel.js';
 
 export function authenticateToken(req, res, next) {
+  // Check Authorization header first
   const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1];
+  let token = authHeader && authHeader.split(' ')[1];
+
+  // If no header token, check cookie
+  if (!token && req.cookies && req.cookies.auth) {
+    token = req.cookies.auth;
+  }
 
   if (!token) {
     return res.status(401).json({ error: '토큰이 누락됐습니다.' });
