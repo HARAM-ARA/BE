@@ -208,6 +208,9 @@ app.post('/tch/store', async (req, res) => {
     // It does not have description, type, deleted. I will insert what fits.
     // Also need teacher_id. I need to get the user ID first.
     const teacher = db.prepare('SELECT id FROM users WHERE email = ?').get(req.auth.userEmail);
+    if (!teacher) {
+        return res.status(403).json({ error: 'FORBIDDEN', message: '접근 권한이 부족합니다.' });
+    }
 
     const result = db.prepare(
       'INSERT INTO stores (name, price, quantity, image_url, teacher_id) VALUES (?, ?, ?, ?, ?)'

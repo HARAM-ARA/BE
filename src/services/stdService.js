@@ -19,7 +19,7 @@ export const stdService = {
         const teamId = studentTeam.team_id;
         const team = teamModel.findById(teamId);
 
-        // 크레딧 확인 (500 크레딧 이상 필요)
+        // 크레딧 확인 (1000 크레딧 이상 필요)
         if (team.team_credit < 1000) {
             throw { status: 403, message: '크레딧이 부족합니다', code: 'PAYMENT_REQUIRED' };
         }
@@ -37,7 +37,15 @@ export const stdService = {
             db.prepare('UPDATE teams SET team_credit = team_credit - 500 WHERE id = ?').run(teamId);
 
             // 3. 카드 뽑기 처리
-            boardModel.markCardPulled(cardNumber, teamId);
+            const marked = boardModel.markCardPulled(cardNumber, teamId);
+            if (!marked) {
+              // 이미 다른 요청이 먼저 이 카드를 뽑은 경우
+                throw {
+                    status: 409,
+                    message: '이미 뽑힌 카드입니다',
+                    code: 'ALREADY_PROCESSED',
+                };
+            }
 
             // 4. 확률 로직 실행
             const outcome = this.determineOutcome();
@@ -120,10 +128,10 @@ export const stdService = {
 
             case 'steal':
                 // 크레딧 뺏기 - 프론트엔드에서 팀 선택 필요
-                const stealPercent = this.determineStealPercent();
+                { const stealPercent = this.determineStealPercent();
                 message = '상대 팀 크레딧 뺏어오기!!';
                 effect = 'steal';
-                return { message, effect, stealPercent };
+                return { message, effect, stealPercent }; }
 
             case 'reset':
                 db.prepare('UPDATE teams SET team_credit = 3000').run(); // 모든 팀 초기화 (기본값 3000 가정)
