@@ -241,3 +241,51 @@ throw new AppError('메시지', 400, { detail: '...' });
 # 현재 개발 중인 기능
 - **브랜치**: feat/#17/크레딧-섞기
 - **목적**: 크레딧 섞기 기능 추가
+
+---
+
+# 최근 작업 내역
+
+## 2025-12-05: 크레딧 교환 기능 구현
+### 구현 내용
+- **API**: `POST /std/select/pull/shuffle` 엔드포인트 추가
+- **기능**: 학생이 swap을 뽑았을 때 다른 팀과 크레딧 교환
+
+### 파일 변경
+1. `src/models/teamModel.js`
+   - `swapTeamCredits()`: 두 팀 크레딧 트랜잭션 교환
+   - `grantSwapPermission()`: swap 권한 부여
+   - `hasSwapPermission()`: swap 권한 확인
+   - `revokeSwapPermission()`: swap 권한 제거
+
+2. `src/services/stdService.js`
+   - `pullCard()`: swap 결과 시 권한 자동 부여
+   - `swapCredit()`: 크레딧 교환 로직 (권한 검증 + 일회성)
+
+3. `src/controllers/stdController.js`
+   - `swapCredit()`: 크레딧 교환 컨트롤러
+
+4. `src/routes/std.js`
+   - `POST /std/select/pull/shuffle` 라우트 연결
+
+5. `database.db`
+   - teams 테이블에 `has_swap_permission` 컬럼 추가
+
+### 보안 기능
+- **권한 시스템**: swap을 실제로 뽑은 팀만 교환 가능
+- **일회성 권한**: 한 번 사용하면 자동 제거
+- **트랜잭션**: 교환과 권한 제거를 원자적으로 처리
+- **에러 처리**: NO_PERMISSION, NON_EXIST_TEAM, INCORRECT_TEAM
+
+### API 명세
+```
+POST /std/select/pull/shuffle
+Authorization: Bearer <JWT>
+Body: { "targetTeamId": 3 }
+
+Response: {
+  "message": "선택한 팀과 크레딧이 교환되었습니다.",
+  "myTeam": { "teamId": 1, "credit": 30000 },
+  "targetTeam": { "teamId": 3, "credit": 500 }
+}
+```

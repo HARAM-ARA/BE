@@ -32,4 +32,20 @@ export const stdController = {
             next(error);
         }
     },
+
+    async stealCredit(req, res, next) {
+        try {
+            const { targetTeamId } = req.body;
+            const user = req.user;
+
+            if (!targetTeamId) {
+                return res.status(400).json({ message: '대상 팀 ID가 필요합니다.' });
+            }
+
+            const result = await stdService.stealCredit(user, targetTeamId);
+            res.json(result);
+        } catch (error) {
+            next(error);
+        }
+    },
 };
