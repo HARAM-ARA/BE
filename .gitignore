@@ -145,10 +145,14 @@ vite.config.ts.timestamp-*
 *.db-shm
 *.db-wal
 
-#macOS File
+# macOS File
 .DS_Store
 ._*
 
 # IntelliJ / JetBrains IDE
 .idea/
 *.iml
+
+# Test File
+api.md
+prompt.md

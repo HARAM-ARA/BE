@@ -1,4 +1,5 @@
 import { getDatabase } from './db.js';
+import { PERMISSION, hasPermission, grantPermission, revokePermission } from './permissions.js';
 
 export const teamModel = {
   findByTeamNumber(teamNumber, classNumber) {
@@ -162,34 +163,88 @@ export const teamModel = {
     return transaction();
   },
 
+  // === SWAP 권한 관리 ===
   grantSwapPermission(teamId) {
     const db = getDatabase();
-    const stmt = db.prepare(`
-      UPDATE teams
-      SET has_swap_permission = 1
-      WHERE id = ?
-    `);
-    return stmt.run(teamId);
+    const team = this.findById(teamId);
+    const newFlags = grantPermission(team.permission_flags || 0, PERMISSION.SWAP);
+    const stmt = db.prepare('UPDATE teams SET permission_flags = ? WHERE id = ?');
+    return stmt.run(newFlags, teamId);
   },
 
   hasSwapPermission(teamId) {
     const db = getDatabase();
-    const stmt = db.prepare(`
-      SELECT has_swap_permission
-      FROM teams
-      WHERE id = ?
-    `);
+    const stmt = db.prepare('SELECT permission_flags FROM teams WHERE id = ?');
     const result = stmt.get(teamId);
-    return result && result.has_swap_permission === 1;
+    return result && hasPermission(result.permission_flags || 0, PERMISSION.SWAP);
   },
 
   revokeSwapPermission(teamId) {
     const db = getDatabase();
-    const stmt = db.prepare(`
-      UPDATE teams
-      SET has_swap_permission = 0
-      WHERE id = ?
-    `);
-    return stmt.run(teamId);
+    const team = this.findById(teamId);
+    const newFlags = revokePermission(team.permission_flags || 0, PERMISSION.SWAP);
+    const stmt = db.prepare('UPDATE teams SET permission_flags = ? WHERE id = ?');
+    return stmt.run(newFlags, teamId);
+  },
+
+  // === STEAL 권한 관리 ===
+  grantStealPermission(teamId, stealPercent) {
+    const db = getDatabase();
+    const team = this.findById(teamId);
+    const newFlags = grantPermission(team.permission_flags || 0, PERMISSION.STEAL);
+    const stmt = db.prepare('UPDATE teams SET permission_flags = ?, steal_percent = ? WHERE id = ?');
+    return stmt.run(newFlags, stealPercent, teamId);
+  },
+
+  hasStealPermission(teamId) {
+    const db = getDatabase();
+    const stmt = db.prepare('SELECT permission_flags, steal_percent FROM teams WHERE id = ?');
+    const result = stmt.get(teamId);
+    if (!result) return { hasPermission: false, stealPercent: 0 };
+
+    const hasSteal = hasPermission(result.permission_flags || 0, PERMISSION.STEAL);
+    return {
+      hasPermission: hasSteal,
+      stealPercent: hasSteal ? result.steal_percent : 0
+    };
+  },
+
+  revokeStealPermission(teamId) {
+    const db = getDatabase();
+    const team = this.findById(teamId);
+    const newFlags = revokePermission(team.permission_flags || 0, PERMISSION.STEAL);
+    const stmt = db.prepare('UPDATE teams SET permission_flags = ?, steal_percent = 0 WHERE id = ?');
+    return stmt.run(newFlags, teamId);
+  },
+
+  stealCredit(stealerTeamId, victimTeamId, stealPercent) {
+    const db = getDatabase();
+    const transaction = db.transaction(() => {
+      const selectStmt = db.prepare('SELECT id, team_credit FROM teams WHERE id = ?');
+      const stealerTeam = selectStmt.get(stealerTeamId);
+      const victimTeam = selectStmt.get(victimTeamId);
+
+      if (!stealerTeam || !victimTeam) {
+        throw new Error('One or both teams not found');
+      }
+
+      // 뺏어올 크레딧 계산 (대상 팀 크레딧의 stealPercent%)
+      const stolenAmount = Math.floor(victimTeam.team_credit * (stealPercent / 100));
+
+      // 대상 팀에서 차감
+      const updateVictimStmt = db.prepare('UPDATE teams SET team_credit = team_credit - ? WHERE id = ?');
+      updateVictimStmt.run(stolenAmount, victimTeamId);
+
+      // 뺏는 팀에 추가
+      const updateStealerStmt = db.prepare('UPDATE teams SET team_credit = team_credit + ? WHERE id = ?');
+      updateStealerStmt.run(stolenAmount, stealerTeamId);
+
+      return {
+        stealerTeam: { id: stealerTeam.id, credit: stealerTeam.team_credit + stolenAmount },
+        victimTeam: { id: victimTeam.id, credit: victimTeam.team_credit - stolenAmount },
+        stolenAmount
+      };
+    });
+    return transaction();
   },
 };
