@@ -4,6 +4,7 @@ import { authenticateToken, requireStudent } from '../middlewares/auth.js';
 
 const router = express.Router();
 
+router.get('/account', authenticateToken, requireStudent, stdController.getAccount);
 router.post('/select/pull', authenticateToken, requireStudent, stdController.pullCard);
 router.post('/select/pull/shuffle', authenticateToken, requireStudent, stdController.swapCredit);
 router.post('/select/pull/steal', authenticateToken, requireStudent, stdController.stealCredit);
