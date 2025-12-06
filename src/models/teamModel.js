@@ -217,6 +217,36 @@ export const teamModel = {
     return stmt.run(newFlags, teamId);
   },
 
+  // === ANGER 권한 관리 ===
+  grantAngerPermission(teamId) {
+    const db = getDatabase();
+    const team = this.findById(teamId);
+    const newFlags = grantPermission(team.permission_flags || 0, PERMISSION.ANGER);
+    const stmt = db.prepare('UPDATE teams SET permission_flags = ? WHERE id = ?');
+    return stmt.run(newFlags, teamId);
+  },
+
+  hasAngerPermission(teamId) {
+    const db = getDatabase();
+    const stmt = db.prepare('SELECT permission_flags FROM teams WHERE id = ?');
+    const result = stmt.get(teamId);
+    return result && hasPermission(result.permission_flags || 0, PERMISSION.ANGER);
+  },
+
+  revokeAngerPermission(teamId) {
+    const db = getDatabase();
+    const team = this.findById(teamId);
+    const newFlags = revokePermission(team.permission_flags || 0, PERMISSION.ANGER);
+    const stmt = db.prepare('UPDATE teams SET permission_flags = ? WHERE id = ?');
+    return stmt.run(newFlags, teamId);
+  },
+
+  resetTeamCredit(teamId) {
+    const db = getDatabase();
+    const stmt = db.prepare('UPDATE teams SET team_credit = 3000 WHERE id = ?');
+    return stmt.run(teamId);
+  },
+
   stealCredit(stealerTeamId, victimTeamId, stealPercent) {
     const db = getDatabase();
     const transaction = db.transaction(() => {

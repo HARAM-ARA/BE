@@ -143,6 +143,7 @@ export const stdService = {
 
             case 'anger':
                 // 하은이의 분노 - 프론트엔드에서 팀 선택 필요
+                teamModel.grantAngerPermission(teamId); // 권한 부여
                 message = '하은이의 분노!!!!!!!!!';
                 effect = 'anger';
                 return { message, effect };
@@ -287,6 +288,55 @@ export const stdService = {
             },
             stolenAmount: result.stolenAmount,
             stealPercent
+        };
+    },
+
+    async angerReset(user, targetTeamId) {
+        // 1. 입력 유효성 검사
+        if (!targetTeamId || typeof targetTeamId !== 'number') {
+            throw { status: 400, message: 'ID가 잘못되었습니다', code: 'INCORRECT_TEAM' };
+        }
+
+        // 2. 학생의 팀 정보 조회
+        const studentTeam = teamModel.findStudentTeam(user.id);
+        if (!studentTeam) {
+            throw { status: 403, message: '팀에 소속되어 있지 않습니다.' };
+        }
+        const myTeamId = studentTeam.team_id;
+
+        // 3. anger 권한 확인
+        if (!teamModel.hasAngerPermission(myTeamId)) {
+            throw { status: 403, message: '하은이의 분노 권한이 없습니다', code: 'NO_PERMISSION' };
+        }
+
+        // 4. 대상 팀 존재 확인
+        const targetTeam = teamModel.findById(targetTeamId);
+        if (!targetTeam) {
+            throw { status: 404, message: '존재하지 않는 팀입니다', code: 'NON_EXIST_TEAM' };
+        }
+
+        // 5. 크레딧 초기화 실행 및 권한 제거 (트랜잭션)
+        const db = getDatabase();
+        const transaction = db.transaction(() => {
+            teamModel.resetTeamCredit(targetTeamId);
+            teamModel.revokeAngerPermission(myTeamId);
+        });
+        transaction();
+
+        // 6. 최신 팀 정보 조회
+        const updatedMyTeam = teamModel.findById(myTeamId);
+        const updatedTargetTeam = teamModel.findById(targetTeamId);
+
+        return {
+            message: '선택한 팀의 크레딧이 초기화 되었습니다.',
+            myTeam: {
+                teamId: updatedMyTeam.id,
+                credit: updatedMyTeam.team_credit
+            },
+            targetTeam: {
+                teamId: updatedTargetTeam.id,
+                credit: updatedTargetTeam.team_credit
+            }
         };
     }
 };
