@@ -64,4 +64,14 @@ export const stdController = {
             next(error);
         }
     },
+
+    async getAccount(req, res, next) {
+        try {
+            const user = req.user;
+            const result = await stdService.getAccount(user);
+            res.json(result);
+        } catch (error) {
+            next(error);
+        }
+    },
 };

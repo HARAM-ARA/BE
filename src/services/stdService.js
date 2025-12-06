@@ -338,5 +338,24 @@ export const stdService = {
                 credit: updatedTargetTeam.team_credit
             }
         };
+    },
+
+    async getAccount(user) {
+        // 1. 학생의 팀 정보 조회
+        const studentTeam = teamModel.findStudentTeam(user.id);
+        if (!studentTeam) {
+            throw { status: 404, message: '해당 팀은 존재하지 않습니다.', code: 'NON_EXIST_TEAM' };
+        }
+
+        // 2. 팀 상세 정보 조회
+        const team = teamModel.findById(studentTeam.team_id);
+        if (!team) {
+            throw { status: 404, message: '해당 팀은 존재하지 않습니다.', code: 'NON_EXIST_TEAM' };
+        }
+
+        return {
+            teamId: team.id,
+            credit: team.team_credit
+        };
     }
 };
