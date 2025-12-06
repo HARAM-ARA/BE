@@ -6,6 +6,7 @@ import {
   updateStore,
   deleteStore,
   getAccount,
+  addCredit,
 } from '../controllers/tchController.js';
 import { appendStudents, getTeam, addSingleStudent, createTeam } from '../controllers/teamController.js';
 import { getAllStudents } from '../controllers/userController.js';
@@ -47,6 +48,51 @@ const router = express.Router();
  *         description: 팀을 찾을 수 없음
  */
 router.get('/account', authenticateToken, requireTeacher, getAccount);
+
+/**
+ * @swagger
+ * /tch/account:
+ *   post:
+ *     summary: 팀에 크레딧 추가 (교사 전용)
+ *     tags: [Teacher]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - teamId
+ *               - addCredit
+ *             properties:
+ *               teamId:
+ *                 type: integer
+ *                 description: 팀 ID
+ *               addCredit:
+ *                 type: number
+ *                 description: 추가할 크레딧 (양수)
+ *     responses:
+ *       200:
+ *         description: 크레딧 추가 성공
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 credit:
+ *                   type: number
+ *                 message:
+ *                   type: string
+ *       400:
+ *         description: 잘못된 요청
+ *       401:
+ *         description: 인증 실패
+ *       404:
+ *         description: 팀을 찾을 수 없음
+ */
+router.post('/account', authenticateToken, requireTeacher, addCredit);
 
 /**
  * @swagger

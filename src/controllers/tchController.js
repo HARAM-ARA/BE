@@ -106,3 +106,41 @@ export async function getAccount(req, res, next) {
     next(error);
   }
 }
+
+export async function addCredit(req, res, next) {
+  try {
+    const { teamId, addCredit } = req.body;
+
+    // 1. 입력값 검증
+    if (!teamId) {
+      throw { status: 400, message: '팀 ID가 입력되지 않았습니다.', code: 'NOT_ENTERED' };
+    }
+
+    if (addCredit === undefined || addCredit === null) {
+      throw { status: 400, message: '크레딧이 입력되지 않았습니다.', code: 'NOT_ENTERED' };
+    }
+
+    // 2. addCredit 값 검증 (숫자, 양수)
+    const creditValue = Number(addCredit);
+    if (isNaN(creditValue) || creditValue < 0) {
+      throw { status: 400, message: '크레딧 값이 잘못되었습니다.', code: 'INVALIED_VALUE' };
+    }
+
+    // 3. 팀 존재 확인
+    const team = teamModel.findById(teamId);
+    if (!team) {
+      throw { status: 404, message: '해당 팀은 존재하지 않습니다.', code: 'TEAM_NOT_FOUND' };
+    }
+
+    // 4. 크레딧 추가
+    const newCredit = team.team_credit + creditValue;
+    teamModel.updateTeamCredit(teamId, newCredit);
+
+    res.json({
+      credit: newCredit,
+      message: '크레딧 추가에 성공했습니다.'
+    });
+  } catch (error) {
+    next(error);
+  }
+}
