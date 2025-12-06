@@ -5,6 +5,7 @@ import {
   createStore,
   updateStore,
   deleteStore,
+  getAccount,
 } from '../controllers/tchController.js';
 import { appendStudents, getTeam, addSingleStudent, createTeam } from '../controllers/teamController.js';
 import { getAllStudents } from '../controllers/userController.js';
@@ -12,6 +13,40 @@ import { authenticateToken, requireTeacher } from '../middlewares/auth.js';
 import { upload } from '../config/multer.js';
 
 const router = express.Router();
+
+/**
+ * @swagger
+ * /tch/account:
+ *   get:
+ *     summary: 모든 팀 크레딧 조회 (교사 전용)
+ *     tags: [Teacher]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: 팀 크레딧 목록 조회 성공
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 teams:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       teamName:
+ *                         type: string
+ *                       teamId:
+ *                         type: integer
+ *                       teamCredit:
+ *                         type: integer
+ *       401:
+ *         description: 인증 실패
+ *       404:
+ *         description: 팀을 찾을 수 없음
+ */
+router.get('/account', authenticateToken, requireTeacher, getAccount);
 
 /**
  * @swagger
