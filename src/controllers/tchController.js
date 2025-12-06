@@ -1,4 +1,5 @@
 import { storeService } from '../services/storeService.js';
+import { teamModel } from '../models/teamModel.js';
 import { AppError } from '../middlewares/errorHandler.js';
 
 export async function getAllStores(req, res, next) {
@@ -78,6 +79,28 @@ export async function deleteStore(req, res, next) {
     res.json({
       success: true,
       data: result,
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function getAccount(req, res, next) {
+  try {
+    const teams = teamModel.getAllTeams();
+
+    if (!teams || teams.length === 0) {
+      throw { status: 404, message: '해당 팀은 존재하지 않습니다.', code: 'TEAM_NOT_FOUND' };
+    }
+
+    const formattedTeams = teams.map(team => ({
+      teamName: team.name,
+      teamId: team.id,
+      teamCredit: team.team_credit
+    }));
+
+    res.json({
+      teams: formattedTeams
     });
   } catch (error) {
     next(error);
