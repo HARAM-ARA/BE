@@ -44,11 +44,14 @@ export async function getProfile(req, res, next) {
 export async function logout(req, res, next) {
   try {
     res.json({
-      success: true,
-      message: 'Logged out successfully',
+      message: '로그아웃 되었습니다.',
     });
   } catch (error) {
-    next(error);
+    next({
+      status: 500,
+      code: 'LOGOUT_FAILED',
+      message: '로그아웃에 실패했습니다.',
+    });
   }
 }
 
