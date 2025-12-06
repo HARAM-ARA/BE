@@ -105,7 +105,7 @@ router.get('/profile', authenticateToken, getProfile);
 /**
  * @swagger
  * /haram/auth/logout:
- *   post:
+ *   get:
  *     summary: 로그아웃
  *     tags: [Auth]
  *     security:
@@ -129,6 +129,6 @@ router.get('/profile', authenticateToken, getProfile);
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-router.post('/logout', authenticateToken, logout);
+router.get('/logout', authenticateToken, logout);
 
 export default router;
