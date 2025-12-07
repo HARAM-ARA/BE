@@ -71,17 +71,78 @@ export const typingService = {
   },
 
   /**
-   * 게임 종료
+   * 게임 종료 및 보상 지급
    */
-  endGame(gameId) {
+  async endGame(gameId) {
     const updated = typingGameModel.updateGameStatus(gameId, 'ended');
     if (updated) {
       // 현재 게임 정보 초기화 (0으로 설정)
       typingGameModel.setCurrentGameId(0);
       typingGameModel.setCurrentGameStartTime(0);
       console.log(`[TypingGame] Game ended: ID=${gameId}`);
+
+      // 보상 지급 (한 번만)
+      await this.distributeRewards(gameId);
     }
     return updated;
+  },
+
+  /**
+   * 게임 종료 시 보상 지급
+   */
+  async distributeRewards(gameId) {
+    // 이미 보상을 지급했는지 확인
+    if (typingGameModel.isRewardGiven(gameId)) {
+      console.log(`[TypingGame] Rewards already given for game ${gameId}`);
+      return;
+    }
+
+    // 제출 기록 조회 및 순위 계산
+    const submissions = typingSubmissionModel.getSubmissionsByGame(gameId);
+    if (submissions.length === 0) {
+      console.log(`[TypingGame] No submissions for game ${gameId}`);
+      typingGameModel.markRewardGiven(gameId);
+      return;
+    }
+
+    // 순위별 보상 크레딧
+    const rewards = {
+      1: 25000,
+      2: 20000,
+      3: 15000,
+      4: 10000,
+      5: 5000
+    };
+
+    // 순위 계산 (맞춘 개수 DESC, 시간 ASC)
+    const rankings = submissions
+      .sort((a, b) => {
+        if (b.correct_count !== a.correct_count) {
+          return b.correct_count - a.correct_count;
+        }
+        return a.time_taken - b.time_taken;
+      });
+
+    // 상위 5팀에게 보상 지급
+    const { teamModel } = await import('../models/teamModel.js');
+    for (let i = 0; i < Math.min(5, rankings.length); i++) {
+      const submission = rankings[i];
+      const rank = i + 1;
+      const credit = rewards[rank];
+
+      if (credit) {
+        const team = teamModel.findById(submission.team_id);
+        if (team) {
+          const newCredit = team.team_credit + credit;
+          teamModel.updateTeamCredit(submission.team_id, newCredit);
+          console.log(`[TypingGame] Reward given: Team ${team.name} (rank ${rank}) +${credit} credits`);
+        }
+      }
+    }
+
+    // 보상 지급 완료 표시
+    typingGameModel.markRewardGiven(gameId);
+    console.log(`[TypingGame] All rewards distributed for game ${gameId}`);
   },
 
   /**

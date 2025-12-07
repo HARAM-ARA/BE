@@ -141,5 +141,18 @@ export const typingGameModel = {
       }
       return game;
     });
+  },
+
+  // 보상 지급 여부 확인
+  isRewardGiven(gameId) {
+    const db = getDatabase();
+    const result = db.prepare('SELECT reward_given FROM typing_games WHERE id = ?').get(gameId);
+    return result ? result.reward_given === 1 : false;
+  },
+
+  // 보상 지급 완료 표시
+  markRewardGiven(gameId) {
+    const db = getDatabase();
+    db.prepare('UPDATE typing_games SET reward_given = 1 WHERE id = ?').run(gameId);
   }
 };
