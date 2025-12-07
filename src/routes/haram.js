@@ -1,5 +1,6 @@
 import express from 'express';
 import { getTeams } from '../controllers/teamController.js';
+import { storeController } from '../controllers/storeController.js';
 import { authenticateToken } from '../middlewares/auth.js';
 
 const router = express.Router();
@@ -59,5 +60,52 @@ const router = express.Router();
  *                   example: 토큰이 누락됐습니다.
  */
 router.get('/team', authenticateToken, getTeams);
+
+/**
+ * @swagger
+ * /haram/store:
+ *   get:
+ *     summary: 상점 물품 전체 조회 (인증 불필요)
+ *     tags: [Store]
+ *     responses:
+ *       200:
+ *         description: 물품 목록 조회 성공
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 items:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       itemId:
+ *                         type: integer
+ *                       itemName:
+ *                         type: string
+ *                       description:
+ *                         type: string
+ *                       image:
+ *                         type: string
+ *                       price:
+ *                         type: integer
+ *                       quantity:
+ *                         type: integer
+ *                       type:
+ *                         type: integer
+ *       404:
+ *         description: 물품이 존재하지 않음
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 code:
+ *                   type: string
+ *                 message:
+ *                   type: string
+ */
+router.get('/store', storeController.getAllItems);
 
 export default router;
