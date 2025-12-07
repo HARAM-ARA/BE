@@ -1,6 +1,7 @@
 import { storeService } from '../services/storeService.js';
 import { teamModel } from '../models/teamModel.js';
 import { AppError } from '../middlewares/errorHandler.js';
+import { config } from '../config/index.js';
 
 export async function getAllStores(req, res, next) {
   try {
@@ -31,21 +32,14 @@ export async function getStore(req, res, next) {
 
 export async function createStore(req, res, next) {
   try {
-    const { name, price, quantity, imageUrl } = req.body;
+    const { itemName, description, image, price, quantity, type } = req.body;
 
-    if (!name || price === undefined || quantity === undefined) {
-      throw new AppError('Name, price, and quantity are required', 400);
-    }
-
-    const store = storeService.createStore(
-      { name, price, quantity, imageUrl },
+    const result = storeService.createStore(
+      { itemName, description, image, price, quantity, type },
       req.user.id
     );
 
-    res.status(201).json({
-      success: true,
-      data: { store },
-    });
+    res.status(201).json(result);
   } catch (error) {
     next(error);
   }
@@ -139,6 +133,27 @@ export async function addCredit(req, res, next) {
     res.json({
       credit: newCredit,
       message: '크레딧 추가에 성공했습니다.'
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function uploadStoreImage(req, res, next) {
+  try {
+    if (!req.file) {
+      return res.status(400).json({
+        code: 'INVALID_IMAGE',
+        message: '이미지가 잘못되었습니다.'
+      });
+    }
+
+    // 이미지 URL 생성
+    const imageUrl = `${req.protocol}://${req.get('host')}/uploads/store-images/${req.file.filename}`;
+
+    res.json({
+      imageUrl: imageUrl,
+      message: '이미지 업로드에 성공했습니다.'
     });
   } catch (error) {
     next(error);

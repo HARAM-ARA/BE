@@ -7,11 +7,12 @@ import {
   deleteStore,
   getAccount,
   addCredit,
+  uploadStoreImage,
 } from '../controllers/tchController.js';
 import { appendStudents, getTeam, addSingleStudent, createTeam } from '../controllers/teamController.js';
 import { getAllStudents } from '../controllers/userController.js';
 import { authenticateToken, requireTeacher } from '../middlewares/auth.js';
-import { upload } from '../config/multer.js';
+import { upload, validateImageSize } from '../middlewares/upload.js';
 
 const router = express.Router();
 
@@ -119,6 +120,9 @@ router.post('/account', authenticateToken, requireTeacher, addCredit);
  *                         $ref: '#/components/schemas/Store'
  */
 router.get('/store', getAllStores);
+
+// 이미지 업로드 (store 생성 전에 먼저 업로드)
+router.post('/store/upload', authenticateToken, requireTeacher, upload.single('image'), validateImageSize, uploadStoreImage);
 
 /**
  * @swagger

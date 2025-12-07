@@ -1,6 +1,8 @@
 import express from 'express';
 import cookieParser from 'cookie-parser';
 import swaggerUi from 'swagger-ui-express';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import { config } from './config/index.js';
 import { swaggerSpec } from './config/swagger.js';
 import { initDatabase } from './models/db.js';
@@ -15,6 +17,9 @@ import authRoutes from './routes/auth.js';
 import tchRoutes from './routes/tch.js';
 import haramRoutes from './routes/haram.js';
 import stdRoutes from './routes/std.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 
@@ -36,6 +41,9 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(cspMiddleware);
+
+// 정적 파일 서빙 (이미지 업로드)
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
