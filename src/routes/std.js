@@ -14,5 +14,6 @@ router.post('/select/pull/anger', authenticateToken, requireStudent, stdControll
 // 타자게임
 router.get('/typing/game', authenticateToken, typingController.getGame);
 router.post('/typing/input', authenticateToken, requireStudent, typingController.submitInput);
+router.get('/typing/time', authenticateToken, typingController.getTime);
 
 export default router;
