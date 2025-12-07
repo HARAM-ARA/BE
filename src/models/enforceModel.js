@@ -12,6 +12,7 @@ export const enforceModel = {
         current_problem_id INTEGER DEFAULT 1,
         tier INTEGER DEFAULT 0,
         solved_problems INTEGER DEFAULT 0,
+        pending_problems INTEGER DEFAULT 0,
         total_brain_power INTEGER DEFAULT 0,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -116,8 +117,8 @@ export const enforceModel = {
   createUserProgress(userId) {
     const db = getDatabase();
     const stmt = db.prepare(`
-      INSERT INTO user_progress (user_id, current_problem_id, tier, solved_problems, total_brain_power)
-      VALUES (?, 1, 0, 0, 0)
+      INSERT INTO user_progress (user_id, current_problem_id, tier, solved_problems, pending_problems, total_brain_power)
+      VALUES (?, 1, 0, 0, 0, 0)
     `);
     const result = stmt.run(userId);
     return result.lastInsertRowid;
@@ -131,6 +132,7 @@ export const enforceModel = {
       SET current_problem_id = ?,
           tier = ?,
           solved_problems = ?,
+          pending_problems = ?,
           total_brain_power = ?,
           updated_at = CURRENT_TIMESTAMP
       WHERE user_id = ?
@@ -139,6 +141,7 @@ export const enforceModel = {
       data.currentProblemId,
       data.tier,
       data.solvedProblems,
+      data.pendingProblems,
       data.totalBrainPower,
       userId
     );
