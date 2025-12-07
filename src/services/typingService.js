@@ -226,6 +226,87 @@ export const typingService = {
   },
 
   /**
+   * 현재 게임 등수 조회
+   */
+  async getCurrentGameRank(user) {
+    // 사용자의 팀 조회
+    const { teamModel } = await import('../models/teamModel.js');
+    const studentTeam = teamModel.findStudentTeam(user.id);
+    let myTeamId = null;
+    if (studentTeam) {
+      myTeamId = studentTeam.team_id;
+    }
+
+    // 가장 최근 게임 조회
+    const allGames = typingGameModel.getAllGames();
+    if (allGames.length === 0) {
+      throw {
+        status: 404,
+        code: 'NO_GAME',
+        message: '진행된 게임이 없습니다.'
+      };
+    }
+
+    const currentGame = allGames[0]; // ID DESC 정렬이므로 첫 번째가 최신
+
+    // 게임이 진행 중인지 확인
+    if (currentGame.status === 'active') {
+      throw {
+        status: 403,
+        code: 'GAME_IN_PROGRESS',
+        message: '게임이 진행 중입니다.'
+      };
+    }
+
+    // 게임의 모든 제출 기록 조회
+    const submissions = typingSubmissionModel.getSubmissionsByGame(currentGame.id);
+
+    if (submissions.length === 0) {
+      return {
+        message: '참가한 팀이 없습니다.',
+        rank: null,
+        winners: []
+      };
+    }
+
+    // 순위 계산 (맞춘 개수 DESC, 시간 ASC)
+    const rankings = submissions
+      .sort((a, b) => {
+        if (b.correct_count !== a.correct_count) {
+          return b.correct_count - a.correct_count; // 맞춘 개수 내림차순
+        }
+        return a.time_taken - b.time_taken; // 시간 오름차순
+      })
+      .map((submission, index) => {
+        const team = teamModel.findById(submission.team_id);
+        return {
+          teamId: submission.team_id,
+          teamName: team ? team.name : '알 수 없음',
+          rank: index + 1,
+          correctCount: submission.correct_count,
+          timeTaken: submission.time_taken
+        };
+      });
+
+    // 본인 팀 순위 찾기
+    const myRanking = rankings.find(r => r.teamId === myTeamId);
+    const myRank = myRanking ? myRanking.rank : null;
+
+    // 상위 5팀만 추출
+    const winners = rankings.slice(0, 5).map(r => ({
+      teamId: r.teamId,
+      teamName: r.teamName,
+      rank: r.rank
+    }));
+
+    return {
+      message: myRank ? `당신 팀은 ${myRank}등입니다` : '참가하지 않았습니다',
+      rank: myRank,
+      winners
+    };
+  },
+
+  /**
    * 초기화 (서버 시작 시)
    */
   initialize() {

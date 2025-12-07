@@ -66,5 +66,19 @@ export const typingController = {
     } catch (error) {
       next(error);
     }
+  },
+
+  /**
+   * GET /std/typing/rank - 현재 게임 등수 조회
+   */
+  async getRank(req, res, next) {
+    try {
+      const user = req.user;
+      const result = await typingService.getCurrentGameRank(user);
+
+      res.json(result);
+    } catch (error) {
+      next(error);
+    }
   }
 };
