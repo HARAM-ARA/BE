@@ -17,4 +17,7 @@ router.post('/typing/input', authenticateToken, requireStudent, typingController
 router.get('/typing/time', authenticateToken, typingController.getTime);
 router.get('/typing/rank', authenticateToken, typingController.getRank);
 
+// 상점
+router.post('/store', authenticateToken, requireStudent, stdController.purchaseStore);
+
 export default router;

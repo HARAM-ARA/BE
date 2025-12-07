@@ -1,4 +1,7 @@
 import { storeModel } from '../models/storeModel.js';
+import { teamModel } from '../models/teamModel.js';
+import { purchaseModel } from '../models/purchaseModel.js';
+import { getDatabase } from '../models/db.js';
 import { validatePrice, validateQuantity, validateString } from '../utils/validation.js';
 import { AppError } from '../middlewares/errorHandler.js';
 
@@ -147,6 +150,76 @@ export const storeService = {
       itemId: id,
       message: '해당 물품이 삭제되었습니다.',
       deleted: true
+    };
+  },
+
+  purchaseItem(user, itemId, quantity) {
+    // 1. 수량 검증
+    if (!quantity || typeof quantity !== 'number' || !Number.isInteger(quantity) || quantity <= 0) {
+      throw { status: 400, code: 'INVALID_QUANTITY', message: '수량 입력이 잘못되었습니다.' };
+    }
+
+    // 2. 사용자의 팀 조회
+    const studentTeam = teamModel.findStudentTeam(user.id);
+    if (!studentTeam) {
+      throw { status: 404, code: 'TEAM_NOT_FOUND', message: '팀을 찾을 수 없습니다.' };
+    }
+    const teamId = studentTeam.team_id;
+
+    // 3. 상품 존재 확인
+    const item = storeModel.findById(itemId);
+    if (!item || item.deleted === 1) {
+      throw { status: 404, code: 'ITEM_NOT_FOUND', message: '상품을 찾을 수 없습니다' };
+    }
+
+    // 4. 재고 확인 (quantity가 -1이면 무제한)
+    if (item.quantity !== -1 && item.quantity < quantity) {
+      throw { status: 404, code: 'OUT_OF_QUANTITY', message: '상품 재고가 없습니다.' };
+    }
+
+    // 5. 총 가격 계산
+    const totalPrice = item.price * quantity;
+
+    // 6. 팀 정보 조회 및 크레딧 확인
+    const team = teamModel.findById(teamId);
+    if (!team) {
+      throw { status: 404, code: 'TEAM_NOT_FOUND', message: '팀을 찾을 수 없습니다.' };
+    }
+
+    if (team.team_credit < totalPrice) {
+      throw { status: 403, code: 'PAYMENT_REQUIRED', message: '크레딧이 부족합니다' };
+    }
+
+    // 7. 트랜잭션으로 처리
+    const db = getDatabase();
+    const transaction = db.transaction(() => {
+      // 팀 크레딧 차감
+      const newCredit = team.team_credit - totalPrice;
+      teamModel.updateTeamCredit(teamId, newCredit);
+
+      // 상품 재고 차감 (quantity가 -1이 아닌 경우만)
+      if (item.quantity !== -1) {
+        const updateStmt = db.prepare('UPDATE stores SET quantity = quantity - ? WHERE id = ?');
+        updateStmt.run(quantity, itemId);
+      }
+
+      // 구매 기록 저장
+      purchaseModel.createPurchase(teamId, itemId, quantity, totalPrice);
+
+      return newCredit;
+    });
+
+    const remainingCredit = transaction();
+
+    return {
+      message: '구매가 완료되었습니다.',
+      item: {
+        itemId: item.id,
+        price: item.price,
+        name: item.name,
+        quantity: quantity
+      },
+      remainingCredit: remainingCredit
     };
   },
 };

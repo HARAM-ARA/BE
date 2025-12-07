@@ -10,6 +10,7 @@ import { boardModel } from './models/boardModel.js';
 import { wordModel } from './models/wordModel.js';
 import { typingGameModel } from './models/typingGameModel.js';
 import { typingSubmissionModel } from './models/typingSubmissionModel.js';
+import { purchaseModel } from './models/purchaseModel.js';
 import { typingService } from './services/typingService.js';
 import { cspMiddleware } from './middlewares/csp.js';
 import { errorHandler, notFoundHandler } from './middlewares/errorHandler.js';
@@ -67,6 +68,9 @@ wordModel.initWords();
 typingGameModel.initGames();
 typingSubmissionModel.initSubmissions();
 typingService.initialize();
+
+// 구매 기록 초기화
+purchaseModel.initPurchases();
 
 app.listen(config.port, () => {
   console.log(`Server running on port ${config.port}`);

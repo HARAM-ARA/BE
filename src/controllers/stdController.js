@@ -1,4 +1,5 @@
 import { stdService } from '../services/stdService.js';
+import { storeService } from '../services/storeService.js';
 
 export const stdController = {
     async pullCard(req, res, next) {
@@ -69,6 +70,18 @@ export const stdController = {
         try {
             const user = req.user;
             const result = await stdService.getAccount(user);
+            res.json(result);
+        } catch (error) {
+            next(error);
+        }
+    },
+
+    async purchaseStore(req, res, next) {
+        try {
+            const { itemId, quantity } = req.body;
+            const user = req.user;
+
+            const result = storeService.purchaseItem(user, itemId, quantity);
             res.json(result);
         } catch (error) {
             next(error);
