@@ -26,5 +26,6 @@ router.get('/enforce/data', authenticateToken, enforceController.getEnforceData)
 router.post('/enforce', authenticateToken, enforceController.attemptEnforce);
 router.delete('/enforce', authenticateToken, enforceController.sellAccount);
 router.post('/enforce/buy', authenticateToken, enforceController.buyTier);
+router.post('/enforce/credit', authenticateToken, enforceController.convertToCredit);
 
 export default router;

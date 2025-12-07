@@ -1,4 +1,5 @@
 import { enforceModel } from '../models/enforceModel.js';
+import { teamModel } from '../models/teamModel.js';
 import { getDatabase } from '../models/db.js';
 
 export const enforceService = {
@@ -231,6 +232,64 @@ export const enforceService = {
         message: `계정 구매가 완료되었습니다. 현재 티어: ${this.getTierName(purchaseTier)}`,
         tier: purchaseTier,
         totalProblem: newSolvedProblems
+      };
+    });
+
+    return transaction();
+  },
+
+  // 문제를 크레딧으로 전환
+  async convertToCredit(user) {
+    // 1. 사용자 진행도 조회
+    let progress = enforceModel.getUserProgress(user.id);
+    if (!progress) {
+      enforceModel.createUserProgress(user.id);
+      progress = enforceModel.getUserProgress(user.id);
+    }
+
+    // 2. solved_problems가 0이면 에러
+    if (progress.solved_problems === 0) {
+      throw {
+        status: 404,
+        code: 'NO_PROBLEMS',
+        message: '푼 문제가 없습니다.'
+      };
+    }
+
+    // 3. 사용자의 팀 조회
+    const studentTeam = teamModel.findStudentTeam(user.id);
+    if (!studentTeam) {
+      throw {
+        status: 404,
+        code: 'TEAM_NOT_FOUND',
+        message: '팀을 찾을 수 없습니다.'
+      };
+    }
+    const teamId = studentTeam.team_id;
+
+    // 4. 크레딧 계산: 문제수 * 10
+    const creditToAdd = progress.solved_problems * 10;
+
+    // 5. 트랜잭션으로 처리
+    const db = getDatabase();
+    const transaction = db.transaction(() => {
+      // 팀 크레딧 추가
+      const team = teamModel.findById(teamId);
+      const newCredit = team.team_credit + creditToAdd;
+      teamModel.updateTeamCredit(teamId, newCredit);
+
+      // solved_problems를 0으로 초기화
+      enforceModel.updateUserProgress(user.id, {
+        currentProblemId: progress.current_problem_id,
+        tier: progress.tier,
+        solvedProblems: 0,
+        pendingProblems: progress.pending_problems,
+        totalBrainPower: progress.total_brain_power
+      });
+
+      return {
+        message: `문제를 크레딧으로 정산합니다. +${creditToAdd}크레딧`,
+        totalProblem: 0
       };
     });
 
