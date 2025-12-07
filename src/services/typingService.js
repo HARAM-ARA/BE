@@ -108,11 +108,23 @@ export const typingService = {
   /**
    * 타자게임 제출
    */
-  async submitTyping(user, teamId, input, gameId) {
+  async submitTyping(user, input, gameId) {
     // 0. 실시간으로 게임 시작/종료 확인
     this.checkAndUpdateGames();
 
-    // 1. 입력값 검증
+    // 1. 사용자의 팀 조회
+    const { teamModel } = await import('../models/teamModel.js');
+    const studentTeam = teamModel.findStudentTeam(user.id);
+    if (!studentTeam) {
+      throw {
+        status: 403,
+        code: 'NOT_IN_TEAM',
+        message: '팀에 소속되어 있지 않습니다.'
+      };
+    }
+    const teamId = studentTeam.team_id;
+
+    // 2. 입력값 검증
     if (!input || !Array.isArray(input) || input.length === 0) {
       throw {
         status: 400,
@@ -121,7 +133,7 @@ export const typingService = {
       };
     }
 
-    // 2. 입력값 길이 검증 (각 단어 20자 제한)
+    // 3. 입력값 길이 검증 (각 단어 20자 제한)
     for (const word of input) {
       if (word.length > 20) {
         throw {

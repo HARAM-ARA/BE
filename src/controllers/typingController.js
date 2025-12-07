@@ -31,17 +31,10 @@ export const typingController = {
    */
   async submitInput(req, res, next) {
     try {
-      const { teamId, input, gameId } = req.body;
+      const { input, gameId } = req.body;
       const user = req.user;
 
       // 입력값 검증
-      if (teamId === undefined || teamId === null) {
-        return res.status(400).json({
-          code: 'INVALID_REQUEST',
-          message: '팀 ID가 필요합니다.'
-        });
-      }
-
       if (gameId === undefined || gameId === null) {
         return res.status(400).json({
           code: 'INVALID_REQUEST',
@@ -49,7 +42,7 @@ export const typingController = {
         });
       }
 
-      const result = await typingService.submitTyping(user, teamId, input, gameId);
+      const result = await typingService.submitTyping(user, input, gameId);
 
       res.json(result);
     } catch (error) {
