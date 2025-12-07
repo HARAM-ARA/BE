@@ -1,4 +1,5 @@
 import { typingService } from '../services/typingService.js';
+import { typingGameModel } from '../models/typingGameModel.js';
 
 export const typingController = {
   /**
@@ -45,6 +46,23 @@ export const typingController = {
       const result = await typingService.submitTyping(user, input, gameId);
 
       res.json(result);
+    } catch (error) {
+      next(error);
+    }
+  },
+
+  /**
+   * GET /std/typing/time - 서버 시간 조회
+   */
+  async getTime(req, res, next) {
+    try {
+      const serverTime = Date.now();
+      const nextEventTime = typingGameModel.getNextGameTime();
+
+      res.json({
+        serverTime: serverTime.toString(),
+        nextEventTime: nextEventTime ? nextEventTime.toString() : serverTime.toString()
+      });
     } catch (error) {
       next(error);
     }
