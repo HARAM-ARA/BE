@@ -3,7 +3,7 @@ import { getDatabase } from './db.js';
 export const storeModel = {
   findAll() {
     const db = getDatabase();
-    const stmt = db.prepare('SELECT * FROM stores');
+    const stmt = db.prepare('SELECT * FROM stores WHERE deleted = 0');
     return stmt.all();
   },
 
@@ -57,7 +57,13 @@ export const storeModel = {
 
   delete(id) {
     const db = getDatabase();
-    const stmt = db.prepare('DELETE FROM stores WHERE id = ?');
+    const stmt = db.prepare('UPDATE stores SET deleted = 1 WHERE id = ?');
     return stmt.run(id);
+  },
+
+  findByIdIncludingDeleted(id) {
+    const db = getDatabase();
+    const stmt = db.prepare('SELECT * FROM stores WHERE id = ?');
+    return stmt.get(id);
   },
 };

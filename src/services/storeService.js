@@ -126,16 +126,27 @@ export const storeService = {
   },
 
   deleteStore(id, teacherId) {
-    const store = storeModel.findById(id);
+    // 삭제된 것도 포함해서 조회 (이미 삭제된 경우 처리)
+    const store = storeModel.findByIdIncludingDeleted(id);
+
     if (!store) {
-      throw new AppError('Store not found', 404);
+      throw { status: 404, code: 'NOT_FOUND', message: '존재하는 물품이 아닙니다.' };
+    }
+
+    if (store.deleted === 1) {
+      throw { status: 404, code: 'NOT_FOUND', message: '존재하는 물품이 아닙니다.' };
     }
 
     if (store.teacher_id !== teacherId) {
-      throw new AppError('Unauthorized to delete this store', 403);
+      throw { status: 403, code: 'FORBIDDEN', message: '접근 권한이 부족합니다.' };
     }
 
     storeModel.delete(id);
-    return { message: 'Store deleted successfully' };
+
+    return {
+      itemId: id,
+      message: '해당 물품이 삭제되었습니다.',
+      deleted: true
+    };
   },
 };

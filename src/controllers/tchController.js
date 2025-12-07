@@ -65,12 +65,19 @@ export async function updateStore(req, res, next) {
 export async function deleteStore(req, res, next) {
   try {
     const { id } = req.params;
-    const result = storeService.deleteStore(parseInt(id, 10), req.user.id);
 
-    res.json({
-      success: true,
-      data: result,
-    });
+    // ID 검증
+    const itemId = parseInt(id, 10);
+    if (isNaN(itemId) || itemId <= 0) {
+      return res.status(400).json({
+        code: 'INVALID_ITEMID',
+        message: '물품 ID가 잘못되었습니다.'
+      });
+    }
+
+    const result = storeService.deleteStore(itemId, req.user.id);
+
+    res.json(result);
   } catch (error) {
     next(error);
   }
