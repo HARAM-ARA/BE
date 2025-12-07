@@ -48,18 +48,15 @@ export async function createStore(req, res, next) {
 export async function updateStore(req, res, next) {
   try {
     const { id } = req.params;
-    const { name, price, quantity, imageUrl } = req.body;
+    const { itemName, description, image, price, quantity, type } = req.body;
 
-    const store = storeService.updateStore(
+    const result = storeService.updateStore(
       parseInt(id, 10),
-      { name, price, quantity, imageUrl },
+      { itemName, description, image, price, quantity, type },
       req.user.id
     );
 
-    res.json({
-      success: true,
-      data: { store },
-    });
+    res.json(result);
   } catch (error) {
     next(error);
   }

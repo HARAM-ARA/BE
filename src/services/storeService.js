@@ -63,32 +63,66 @@ export const storeService = {
   },
 
   updateStore(id, data, teacherId) {
-    try {
-      const store = storeModel.findById(id);
-      if (!store) {
-        throw new AppError('Store not found', 404);
-      }
-
-      if (store.teacher_id !== teacherId) {
-        throw new AppError('Unauthorized to update this store', 403);
-      }
-
-      if (data.name) validateString(data.name, 'Store name', 1, 100);
-      if (data.price !== undefined) validatePrice(data.price);
-      if (data.quantity !== undefined) validateQuantity(data.quantity);
-
-      const updateData = {
-        name: data.name || store.name,
-        price: data.price !== undefined ? data.price : store.price,
-        quantity: data.quantity !== undefined ? data.quantity : store.quantity,
-        imageUrl: data.imageUrl !== undefined ? data.imageUrl : store.image_url,
-      };
-
-      storeModel.update(id, updateData);
-      return storeModel.findById(id);
-    } catch (error) {
-      throw new AppError(error.message, error.statusCode || 400);
+    // 1. 상점 존재 확인
+    const store = storeModel.findById(id);
+    if (!store) {
+      throw { status: 404, code: 'NOT_FOUND', message: '상점을 찾을 수 없습니다.' };
     }
+
+    // 2. 권한 확인
+    if (store.teacher_id !== teacherId) {
+      throw { status: 403, code: 'FORBIDDEN', message: '접근 권한이 부족합니다.' };
+    }
+
+    // 3. itemName 검증 (제공된 경우)
+    if (data.itemName !== undefined) {
+      if (!data.itemName || typeof data.itemName !== 'string' || data.itemName.trim().length === 0) {
+        throw { status: 400, code: 'INVALID_NAME', message: '이름이 잘못되었습니다.' };
+      }
+
+      // 다른 상점과 이름 중복 확인
+      const existingStore = storeModel.findByName(data.itemName);
+      if (existingStore && existingStore.id !== id) {
+        throw { status: 409, code: 'DUPLICATE_ITEM', message: '이미 존재하는 이름의 아이템입니다.' };
+      }
+    }
+
+    // 4. price 검증 (제공된 경우)
+    if (data.price !== undefined) {
+      if (typeof data.price !== 'number' || !Number.isInteger(data.price) || data.price < 0) {
+        throw { status: 400, code: 'INVALID_PRICE', message: '금액이 잘못되었습니다.' };
+      }
+    }
+
+    // 5. quantity 검증 (제공된 경우)
+    if (data.quantity !== undefined) {
+      if (typeof data.quantity !== 'number' || !Number.isInteger(data.quantity) || data.quantity < -1) {
+        throw { status: 400, code: 'BAD_REQUEST', message: '잘못된 요청입니다.' };
+      }
+    }
+
+    // 6. type 검증 (제공된 경우)
+    if (data.type !== undefined) {
+      if (![1, 2].includes(data.type)) {
+        throw { status: 400, code: 'INVALID_TYPE', message: '타입이 잘못되었습니다.' };
+      }
+    }
+
+    const updateData = {
+      name: data.itemName !== undefined ? data.itemName : store.name,
+      description: data.description !== undefined ? data.description : store.description,
+      price: data.price !== undefined ? data.price : store.price,
+      quantity: data.quantity !== undefined ? data.quantity : store.quantity,
+      imageUrl: data.image !== undefined ? data.image : store.image_url,
+      type: data.type !== undefined ? data.type : store.type,
+    };
+
+    storeModel.update(id, updateData);
+
+    return {
+      itemId: id,
+      message: '물품 수정에 성공했습니다.'
+    };
   },
 
   deleteStore(id, teacherId) {

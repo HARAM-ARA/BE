@@ -41,10 +41,18 @@ export const storeModel = {
     const db = getDatabase();
     const stmt = db.prepare(`
       UPDATE stores
-      SET name = ?, price = ?, quantity = ?, image_url = ?
+      SET name = ?, description = ?, price = ?, quantity = ?, image_url = ?, type = ?
       WHERE id = ?
     `);
-    return stmt.run(data.name, data.price, data.quantity, data.imageUrl, id);
+    return stmt.run(
+      data.name,
+      data.description,
+      data.price,
+      data.quantity,
+      data.imageUrl,
+      data.type,
+      id
+    );
   },
 
   delete(id) {
