@@ -145,7 +145,44 @@ export async function uploadStoreImage(req, res, next) {
       });
     }
 
-    // 이미지 URL 생성
+    const crypto = await import('crypto');
+    const fs = await import('fs/promises');
+    const path = await import('path');
+    const { fileURLToPath } = await import('url');
+
+    const __filename = fileURLToPath(import.meta.url);
+    const __dirname = path.dirname(__filename);
+    const uploadsDir = path.join(__dirname, '../../uploads/store-images');
+
+    // 업로드된 파일의 해시 계산
+    const fileBuffer = await fs.readFile(req.file.path);
+    const hash = crypto.createHash('md5').update(fileBuffer).digest('hex');
+
+    // 기존 파일들 확인
+    const existingFiles = await fs.readdir(uploadsDir);
+
+    for (const file of existingFiles) {
+      const filePath = path.join(uploadsDir, file);
+      const stats = await fs.stat(filePath);
+
+      if (stats.isFile()) {
+        const existingBuffer = await fs.readFile(filePath);
+        const existingHash = crypto.createHash('md5').update(existingBuffer).digest('hex');
+
+        if (hash === existingHash) {
+          // 중복 파일 발견 - 새로 업로드한 파일 삭제
+          await fs.unlink(req.file.path);
+
+          const imageUrl = `${req.protocol}://${req.get('host')}/uploads/store-images/${file}`;
+          return res.json({
+            imageUrl: imageUrl,
+            message: '이미 존재하는 이미지입니다.'
+          });
+        }
+      }
+    }
+
+    // 중복 없음 - 새 파일 URL 반환
     const imageUrl = `${req.protocol}://${req.get('host')}/uploads/store-images/${req.file.filename}`;
 
     res.json({
