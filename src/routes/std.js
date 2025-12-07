@@ -1,6 +1,7 @@
 import express from 'express';
 import { stdController } from '../controllers/stdController.js';
 import { typingController } from '../controllers/typingController.js';
+import { enforceController } from '../controllers/enforceController.js';
 import { authenticateToken, requireStudent } from '../middlewares/auth.js';
 
 const router = express.Router();
@@ -19,5 +20,8 @@ router.get('/typing/rank', authenticateToken, typingController.getRank);
 
 // 상점
 router.post('/store', authenticateToken, requireStudent, stdController.purchaseStore);
+
+// 강화
+router.get('/enforce/data', authenticateToken, enforceController.getEnforceData);
 
 export default router;
