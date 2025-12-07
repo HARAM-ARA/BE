@@ -15,5 +15,6 @@ router.post('/select/pull/anger', authenticateToken, requireStudent, stdControll
 router.get('/typing/game', authenticateToken, typingController.getGame);
 router.post('/typing/input', authenticateToken, requireStudent, typingController.submitInput);
 router.get('/typing/time', authenticateToken, typingController.getTime);
+router.get('/typing/rank', authenticateToken, typingController.getRank);
 
 export default router;
