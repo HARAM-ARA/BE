@@ -5,6 +5,10 @@ import { config } from './config/index.js';
 import { swaggerSpec } from './config/swagger.js';
 import { initDatabase } from './models/db.js';
 import { boardModel } from './models/boardModel.js';
+import { wordModel } from './models/wordModel.js';
+import { typingGameModel } from './models/typingGameModel.js';
+import { typingSubmissionModel } from './models/typingSubmissionModel.js';
+import { typingService } from './services/typingService.js';
 import { cspMiddleware } from './middlewares/csp.js';
 import { errorHandler, notFoundHandler } from './middlewares/errorHandler.js';
 import authRoutes from './routes/auth.js';
@@ -49,6 +53,12 @@ app.use(errorHandler);
 
 initDatabase();
 boardModel.initBoard();
+
+// 타자게임 초기화
+wordModel.initWords();
+typingGameModel.initGames();
+typingSubmissionModel.initSubmissions();
+typingService.initialize();
 
 app.listen(config.port, () => {
   console.log(`Server running on port ${config.port}`);
