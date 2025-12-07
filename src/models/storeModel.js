@@ -66,4 +66,10 @@ export const storeModel = {
     const stmt = db.prepare('SELECT * FROM stores WHERE id = ?');
     return stmt.get(id);
   },
+
+  findByType(type) {
+    const db = getDatabase();
+    const stmt = db.prepare('SELECT * FROM stores WHERE type = ? AND deleted = 0');
+    return stmt.all(type);
+  },
 };

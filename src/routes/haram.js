@@ -108,4 +108,74 @@ router.get('/team', authenticateToken, getTeams);
  */
 router.get('/store', storeController.getAllItems);
 
+/**
+ * @swagger
+ * /haram/store/{type}:
+ *   get:
+ *     summary: 타입별 상점 물품 조회 (인증 불필요)
+ *     tags: [Store]
+ *     parameters:
+ *       - in: path
+ *         name: type
+ *         required: true
+ *         schema:
+ *           type: integer
+ *           enum: [1, 2]
+ *         description: 물품 타입 (1=쿠폰, 2=간식)
+ *     responses:
+ *       200:
+ *         description: 물품 목록 조회 성공
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 items:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       itemId:
+ *                         type: integer
+ *                       itemName:
+ *                         type: string
+ *                       description:
+ *                         type: string
+ *                       image:
+ *                         type: string
+ *                       price:
+ *                         type: integer
+ *                       quantity:
+ *                         type: integer
+ *                       type:
+ *                         type: integer
+ *       400:
+ *         description: 타입이 잘못됨
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 code:
+ *                   type: string
+ *                   example: TYPE_ERROR
+ *                 message:
+ *                   type: string
+ *                   example: 타입이 잘못 입력되었습니다.
+ *       404:
+ *         description: 물품이 존재하지 않음
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 code:
+ *                   type: string
+ *                   example: NOT_FOUND
+ *                 message:
+ *                   type: string
+ *                   example: 아무런 물품이 존재하지 않습니다.
+ */
+router.get('/store/:type', storeController.getItemsByType);
+
 export default router;
