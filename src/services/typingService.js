@@ -133,9 +133,9 @@ export const typingService = {
       };
     }
 
-    // 3. 입력값 길이 검증 (각 단어 20자 제한)
+    // 3. 입력값 타입 및 길이 검증 (각 단어 20자 제한)
     for (const word of input) {
-      if (word.length > 20) {
+      if (typeof word !== 'string' || word.length > 20) {
         throw {
           status: 413,
           code: 'INPUT_TOO_LONG',
