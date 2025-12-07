@@ -9,5 +9,15 @@ export const enforceController = {
     } catch (error) {
       next(error);
     }
+  },
+
+  async attemptEnforce(req, res, next) {
+    try {
+      const user = req.user;
+      const result = await enforceService.attemptEnforce(user);
+      res.json(result);
+    } catch (error) {
+      next(error);
+    }
   }
 };

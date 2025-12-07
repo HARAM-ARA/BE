@@ -23,5 +23,6 @@ router.post('/store', authenticateToken, requireStudent, stdController.purchaseS
 
 // 강화
 router.get('/enforce/data', authenticateToken, enforceController.getEnforceData);
+router.post('/enforce', authenticateToken, enforceController.attemptEnforce);
 
 export default router;
