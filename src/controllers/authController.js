@@ -1,5 +1,6 @@
 import { authenticateWithGoogle } from '../services/oauthService.js';
 import { AppError } from '../middlewares/errorHandler.js';
+import { config } from '../config/index.js';
 
 export async function login(req, res, next) {
   try {
@@ -67,15 +68,20 @@ export async function handleCallback(req, res, next) {
 
     // Set cookie for browser-based auth
     const isProd = process.env.NODE_ENV === 'production';
-    res.cookie('auth', token, {
+    const cookieOptions = {
       httpOnly: true,
       secure: isProd,
-      sameSite: 'lax',
+      sameSite: isProd ? 'none' : 'lax',
       maxAge: 1000 * 60 * 60 * 24 * 7 // 7 days
-    });
+    };
+    if (config.cookieDomain) {
+      cookieOptions.domain = config.cookieDomain;
+    }
 
-    // Redirect to home page
-    res.redirect('/');
+    res.cookie('auth', token, cookieOptions);
+
+    // Redirect to front-end (use configured client origin when available)
+    res.redirect(config.clientOrigin || 'http://localhost:5173');
   } catch (error) {
     console.error('Error in /haram/auth:', error);
     next(error);

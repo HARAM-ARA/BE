@@ -9,6 +9,19 @@ dotenv.config();
 const app = express();
 app.use(express.json());
 app.use(cookieParser());
+// CORS: allow Vite dev server on localhost:5173 to access this API
+app.use((req, res, next) => {
+  const allowedOrigin = 'http://localhost:5173';
+  const origin = req.headers.origin;
+  if (origin && origin === allowedOrigin) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    if (req.method === 'OPTIONS') return res.sendStatus(200);
+  }
+  next();
+});
 const PORT = process.env.PORT || 3000;
 
 const db = new sql('data.db');
@@ -102,7 +115,7 @@ app.get('/haram/auth', async (req, res) => {
       db.prepare('INSERT INTO users (email, name, role, google_id) VALUES (?, ?, ?, ?)')
         .run(userInfo.email, userInfo.name, role, userInfo.id);
     }
-    res.redirect('/');
+    res.redirect("http://localhost:5173");
   } catch (err) {
     console.error('Error in /haram/auth:', err);
     res.status(500).json({ message: 'LOGIN_FAILED' });

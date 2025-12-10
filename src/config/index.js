@@ -15,4 +15,6 @@ export const config = {
     redirectUri: process.env.GOOGLE_REDIRECT_URI || 'http://localhost:3000/haram/auth/callback',
   },
   googleApiKey: process.env.GOOGLE_API_KEY,
+  clientOrigin: process.env.CLIENT_ORIGIN || 'http://localhost:5173',
+  cookieDomain: process.env.COOKIE_DOMAIN || undefined,
 };
