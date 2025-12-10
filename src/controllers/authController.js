@@ -1,6 +1,7 @@
 import { authenticateWithGoogle } from '../services/oauthService.js';
 import { AppError } from '../middlewares/errorHandler.js';
 import { config } from '../config/index.js';
+import { userModel } from '../models/userModel.js';
 
 export async function login(req, res, next) {
   try {
@@ -31,10 +32,19 @@ export async function login(req, res, next) {
 
 export async function getProfile(req, res, next) {
   try {
+    if (!req.user || !req.user.id) {
+      return res.status(401).json({ success: false, error: '인증된 사용자가 없습니다.' });
+    }
+
+    const user = userModel.findById(req.user.id);
+    if (!user) {
+      return res.status(404).json({ success: false, error: '사용자를 찾을 수 없습니다.' });
+    }
+
     res.json({
       success: true,
       data: {
-        user: req.user,
+        user,
       },
     });
   } catch (error) {
