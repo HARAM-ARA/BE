@@ -91,7 +91,8 @@ export async function handleCallback(req, res, next) {
     res.cookie('auth', token, cookieOptions);
 
     // Redirect to front-end (use configured client origin when available)
-    res.redirect(config.clientOrigin || 'http://localhost:5173');
+    //res.redirect(config.clientOrigin || 'http://localhost:5173');
+    res.json({token});
   } catch (error) {
     console.error('Error in /haram/auth:', error);
     next(error);
