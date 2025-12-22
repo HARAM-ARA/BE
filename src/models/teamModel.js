@@ -19,8 +19,8 @@ export const teamModel = {
   create(data) {
     const db = getDatabase();
     const stmt = db.prepare(`
-      INSERT INTO teams (team_number, class_number, name)
-      VALUES (?, ?, ?)
+      INSERT INTO teams (team_number, class_number, name, student_ids)
+      VALUES (?, ?, ?, '[]')
     `);
     const result = stmt.run(
       data.teamNumber,
@@ -32,62 +32,69 @@ export const teamModel = {
 
   findStudentTeam(studentId) {
     const db = getDatabase();
-    const stmt = db.prepare('SELECT * FROM student_teams WHERE student_id = ?');
-    return stmt.get(studentId);
+    const stmt = db.prepare('SELECT * FROM teams');
+    const teams = stmt.all();
+
+    for (const team of teams) {
+      const studentIds = JSON.parse(team.student_ids || '[]');
+      if (studentIds.includes(studentId)) {
+        return { team_id: team.id };
+      }
+    }
+
+    return null;
   },
 
   addStudentToTeam(studentId, teamId) {
     const db = getDatabase();
-    const stmt = db.prepare(`
-      INSERT INTO student_teams (student_id, team_id)
-      VALUES (?, ?)
-    `);
-    return stmt.run(studentId, teamId);
-  },
+    const team = this.findById(teamId);
+    if (!team) {
+      throw new Error('Team not found');
+    }
 
-  bulkAddStudentsToTeams(students) {
-    const db = getDatabase();
-    const transaction = db.transaction((studentList) => {
-      const stmt = db.prepare(`
-        INSERT INTO student_teams (student_id, team_id)
-        VALUES (?, ?)
-      `);
-      for (const student of studentList) {
-        stmt.run(student.studentId, student.teamId);
-      }
-    });
-    return transaction(students);
+    const studentIds = JSON.parse(team.student_ids || '[]');
+    if (!studentIds.includes(studentId)) {
+      studentIds.push(studentId);
+    }
+
+    const stmt = db.prepare('UPDATE teams SET student_ids = ? WHERE id = ?');
+    return stmt.run(JSON.stringify(studentIds), teamId);
   },
 
   getTeamMembers(teamId) {
     const db = getDatabase();
+    const team = this.findById(teamId);
+    if (!team) {
+      return [];
+    }
+
+    const studentIds = JSON.parse(team.student_ids || '[]');
+    if (studentIds.length === 0) {
+      return [];
+    }
+
+    const placeholders = studentIds.map(() => '?').join(',');
     const stmt = db.prepare(`
-      SELECT u.id, u.email, u.name, st.team_id
-      FROM student_teams st
-      JOIN users u ON st.student_id = u.id
-      WHERE st.team_id = ?
+      SELECT u.id, u.email, u.name, ? as team_id
+      FROM users u
+      WHERE u.id IN (${placeholders})
     `);
-    return stmt.all(teamId);
+    return stmt.all(teamId, ...studentIds);
   },
 
   isStudentInTeam(studentId, teamId) {
     const db = getDatabase();
-    const stmt = db.prepare(`
-      SELECT COUNT(*) as count
-      FROM student_teams
-      WHERE student_id = ? AND team_id = ?
-    `);
-    const result = stmt.get(studentId, teamId);
-    return result.count > 0;
+    const team = this.findById(teamId);
+    if (!team) {
+      return false;
+    }
+
+    const studentIds = JSON.parse(team.student_ids || '[]');
+    return studentIds.includes(studentId);
   },
 
   assignStudentToTeam(studentId, teamId) {
-    const db = getDatabase();
-    const stmt = db.prepare(`
-      INSERT INTO student_teams (student_id, team_id)
-      VALUES (?, ?)
-    `);
-    return stmt.run(studentId, teamId);
+    return this.addStudentToTeam(studentId, teamId);
   },
 
   findByName(teamName) {
@@ -99,8 +106,8 @@ export const teamModel = {
   createTeam(teamName) {
     const db = getDatabase();
     const stmt = db.prepare(`
-      INSERT INTO teams (name, team_number, class_number, team_credit)
-      VALUES (?, 0, 0, 3000)
+      INSERT INTO teams (name, team_number, class_number, team_credit, student_ids)
+      VALUES (?, 0, 0, 3000, '[]')
     `);
     const result = stmt.run(teamName);
     return result.lastInsertRowid;
@@ -108,16 +115,8 @@ export const teamModel = {
 
   addStudentsToTeam(studentIds, teamId) {
     const db = getDatabase();
-    const transaction = db.transaction((students) => {
-      const stmt = db.prepare(`
-        INSERT INTO student_teams (student_id, team_id)
-        VALUES (?, ?)
-      `);
-      for (const studentId of students) {
-        stmt.run(studentId, teamId);
-      }
-    });
-    return transaction(studentIds);
+    const stmt = db.prepare('UPDATE teams SET student_ids = ? WHERE id = ?');
+    return stmt.run(JSON.stringify(studentIds), teamId);
   },
 
   getAllTeams() {
@@ -132,11 +131,8 @@ export const teamModel = {
 
   removeAllStudentsFromTeam(teamId) {
     const db = getDatabase();
-    const stmt = db.prepare(`
-      DELETE FROM student_teams
-      WHERE team_id = ?
-    `);
-    return stmt.run(teamId);
+    const stmt = db.prepare('UPDATE teams SET student_ids = ? WHERE id = ?');
+    return stmt.run('[]', teamId);
   },
 
   createOrUpdateTeam(teamNumber, teamName) {
@@ -145,8 +141,8 @@ export const teamModel = {
 
     if (!team) {
       const stmt = db.prepare(`
-        INSERT INTO teams (name, team_number, class_number, team_credit)
-        VALUES (?, ?, 0, 3000)
+        INSERT INTO teams (name, team_number, class_number, team_credit, student_ids)
+        VALUES (?, ?, 0, 3000, '[]')
       `);
       const result = stmt.run(teamName, teamNumber);
       return result.lastInsertRowid;

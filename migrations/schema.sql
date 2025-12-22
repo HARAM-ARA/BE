@@ -27,26 +27,18 @@ CREATE TABLE IF NOT EXISTS teams (
   class_number INTEGER NOT NULL,
   name TEXT,
   team_credit INTEGER DEFAULT 3000,
+  student_ids TEXT DEFAULT '[]',
+  permission_flags INTEGER DEFAULT 0,
+  steal_percent INTEGER DEFAULT 0,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   UNIQUE(team_number, class_number)
-);
-
-CREATE TABLE IF NOT EXISTS student_teams (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  student_id INTEGER NOT NULL UNIQUE,
-  team_id INTEGER NOT NULL,
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (student_id) REFERENCES users(id) ON DELETE CASCADE,
-  FOREIGN KEY (team_id) REFERENCES teams(id) ON DELETE CASCADE
 );
 
 CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
 CREATE INDEX IF NOT EXISTS idx_users_user_number ON users(user_number);
 CREATE INDEX IF NOT EXISTS idx_users_google_id ON users(google_id);
 CREATE INDEX IF NOT EXISTS idx_stores_teacher_id ON stores(teacher_id);
-CREATE INDEX IF NOT EXISTS idx_student_teams_student_id ON student_teams(student_id);
-CREATE INDEX IF NOT EXISTS idx_student_teams_team_id ON student_teams(team_id);
 
 CREATE TRIGGER IF NOT EXISTS update_users_timestamp
 AFTER UPDATE ON users

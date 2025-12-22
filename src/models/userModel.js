@@ -45,25 +45,60 @@ export const userModel = {
       SELECT
         u.id,
         u.user_number as userId,
-        u.name,
-        st.team_id as teamId
+        u.name
       FROM users u
-      LEFT JOIN student_teams st ON u.id = st.student_id
       WHERE u.role = 'student'
       ORDER BY u.user_number
     `);
-    return stmt.all();
+    const students = stmt.all();
+
+    // Get all teams to find which team each student belongs to
+    const teamsStmt = db.prepare('SELECT id, student_ids FROM teams');
+    const teams = teamsStmt.all();
+
+    // Map student ID to team ID
+    const studentTeamMap = {};
+    for (const team of teams) {
+      const studentIds = JSON.parse(team.student_ids || '[]');
+      for (const studentId of studentIds) {
+        studentTeamMap[studentId] = team.id;
+      }
+    }
+
+    // Add teamId to each student
+    return students.map(student => ({
+      ...student,
+      teamId: studentTeamMap[student.id] || null
+    }));
   },
 
   findByUserNumbers(userNumbers) {
     const db = getDatabase();
     const placeholders = userNumbers.map(() => '?').join(',');
     const stmt = db.prepare(`
-      SELECT u.id, u.user_number, u.name, u.role, st.team_id
+      SELECT u.id, u.user_number, u.name, u.role
       FROM users u
-      LEFT JOIN student_teams st ON u.id = st.student_id
       WHERE u.user_number IN (${placeholders})
     `);
-    return stmt.all(...userNumbers);
+    const students = stmt.all(...userNumbers);
+
+    // Get all teams to find which team each student belongs to
+    const teamsStmt = db.prepare('SELECT id, student_ids FROM teams');
+    const teams = teamsStmt.all();
+
+    // Map student ID to team ID
+    const studentTeamMap = {};
+    for (const team of teams) {
+      const studentIds = JSON.parse(team.student_ids || '[]');
+      for (const studentId of studentIds) {
+        studentTeamMap[studentId] = team.id;
+      }
+    }
+
+    // Add team_id to each student
+    return students.map(student => ({
+      ...student,
+      team_id: studentTeamMap[student.id] || null
+    }));
   },
 };
