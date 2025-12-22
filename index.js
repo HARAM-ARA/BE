@@ -100,9 +100,9 @@ app.get('/haram/auth', async (req, res) => {
     });
     let role = "student";
 
-    if (userInfo.email && !userInfo.email.endsWith('@bssm.hs.kr') && !userInfo.email.includes('yellowaholotle')) {
+    if (userInfo.email && !userInfo.email.endsWith('@bssm.hs.kr') && !userInfo.email.includes('haram123isi123isi')) {
       return res.status(403).json({ message: 'NOT_BSSM_EMAIL' });
-    } else if (userInfo.email.includes('teacher') || userInfo.email.includes('yellowaholotle')) {
+    } else if (userInfo.email.includes('teacher') || userInfo.email.includes('haram123isi123isi')) {
       role = "teacher";
     }
 

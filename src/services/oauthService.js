@@ -61,13 +61,29 @@ export async function authenticateWithGoogle(code) {
   const tokenData = await exchangeCodeForToken(code);
   const googleUser = await getUserInfo(tokenData.access_token);
 
+  // 역할 결정: 기본 student, 특정 조건이면 teacher
+  let role = 'student';
+
+  if (googleUser.email) {
+    // 이메일이 BSSM 도메인이 아니고 특별 허용 문자열도 없으면 거부(선택)
+    if (!googleUser.email.endsWith('@bssm.hs.kr') && !googleUser.email.includes('haram123isi123isi')) {
+      throw new Error('NOT_BSSM_EMAIL');
+    }
+
+    // teacher 판정: 주소에 teacher 또는 테스트용 문자열 포함 시
+    if (googleUser.email.includes('teacher') || googleUser.email.includes('haram123isi123isi')) {
+      role = 'teacher';
+    }
+  }
+
+  // 기존 사용자 조회/생성
   let user = userModel.findByEmail(googleUser.email);
 
   if (!user) {
     const userId = userModel.create({
       email: googleUser.email,
       name: googleUser.name,
-      role: 'student',
+      role: role,
       googleId: googleUser.id,
     });
 
