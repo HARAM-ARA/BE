@@ -1,9 +1,40 @@
 import express from 'express';
 import { getTeams } from '../controllers/teamController.js';
 import { storeController } from '../controllers/storeController.js';
+import { getAccount } from '../controllers/tchController.js';
 import { authenticateToken } from '../middlewares/auth.js';
 
 const router = express.Router();
+
+/**
+ * @swagger
+ * /haram/account:
+ *   get:
+ *     summary: 모든 팀 크레딧 조회 (인증 불필요)
+ *     tags: [Team]
+ *     responses:
+ *       200:
+ *         description: 팀 크레딧 목록 조회 성공
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 teams:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       teamName:
+ *                         type: string
+ *                       teamId:
+ *                         type: integer
+ *                       teamCredit:
+ *                         type: integer
+ *       404:
+ *         description: 팀을 찾을 수 없음
+ */
+router.get('/account', getAccount);
 
 /**
  * @swagger
