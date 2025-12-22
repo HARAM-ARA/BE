@@ -3,18 +3,18 @@ import { AppError } from '../middlewares/errorHandler.js';
 
 export async function appendStudents(req, res, next) {
   try {
-    const { sheetUrl } = req.body;
+    const { teams } = req.body;
 
-    if (!sheetUrl) {
-      throw new AppError('SHEET_URL_MISSING', 400);
+    if (!teams) {
+      throw new AppError('팀 데이터가 누락되었습니다.', 400);
     }
 
-    // Validate URL format
-    if (!sheetUrl.includes('docs.google.com/spreadsheets')) {
-      throw new AppError('INVALID_GOOGLE_SHEETS_URL', 400);
+    // Validate teams is an object
+    if (typeof teams !== 'object' || Array.isArray(teams)) {
+      throw new AppError('팀 데이터 형식이 잘못되었습니다.', 400);
     }
 
-    const result = await teamService.appendStudentsFromGoogleSheets(sheetUrl);
+    const result = await teamService.appendStudentsFromGoogleSheets(teams);
 
     res.status(200).json({
       success: true,

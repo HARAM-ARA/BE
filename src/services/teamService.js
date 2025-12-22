@@ -3,70 +3,75 @@ import { userModel } from '../models/userModel.js';
 import { AppError } from '../middlewares/errorHandler.js';
 import { fetchGoogleSheetsData, validateRequiredColumns } from '../utils/googleSheets.js';
 import { config } from '../config/index.js';
+import { getDatabase } from '../models/db.js';
 
 export const teamService = {
-  async appendStudentsFromGoogleSheets(sheetUrl) {
-    // Fetch data from Google Sheets
-    const rawData = await fetchGoogleSheetsData(sheetUrl, config.googleApiKey);
-
-    // Validate required columns
-    validateRequiredColumns(rawData, ['TEAM_NUMBER', 'CLASS_NUMBER', 'NAME']);
-
-    // Transform data to expected format
-    const students = rawData
-      .filter(row => row.TEAM_NUMBER && row.CLASS_NUMBER && row.NAME)
-      .map(row => ({
-        teamNumber: parseInt(row.TEAM_NUMBER, 10),
-        classNumber: parseInt(row.CLASS_NUMBER, 10),
-        studentName: row.NAME.trim(),
-      }));
-
-    const teamMap = new Map();
-    const studentTeamMappings = [];
-
-    for (const student of students) {
-      const { teamNumber, classNumber, studentName } = student;
-
-      const user = userModel.findByEmail(studentName);
-      if (!user) {
-        throw new AppError(`학생을 찾을 수 없습니다: ${studentName}`, 404);
-      }
-
-      if (user.role !== 'student') {
-        throw new AppError(`${studentName}은(는) 학생이 아닙니다`, 400);
-      }
-
-      const existingTeam = teamModel.findStudentTeam(user.id);
-      if (existingTeam) {
-        throw new AppError(`학생 ${studentName}은(는) 이미 팀에 배정되어 있습니다`, 409);
-      }
-
-      let teamId;
-      const teamKey = `${teamNumber}-${classNumber}`;
-
-      if (teamMap.has(teamKey)) {
-        teamId = teamMap.get(teamKey);
-      } else {
-        let team = teamModel.findByTeamNumber(teamNumber, classNumber);
-        if (!team) {
-          teamId = teamModel.create({ teamNumber, classNumber });
-        } else {
-          teamId = team.id;
-        }
-        teamMap.set(teamKey, teamId);
-      }
-
-      studentTeamMappings.push({
-        studentId: user.id,
-        teamId,
-      });
+  async appendStudentsFromGoogleSheets(teamsData) {
+    // Validate teams data
+    if (!teamsData || typeof teamsData !== 'object') {
+      throw new AppError('잘못된 요청입니다.', 400);
     }
 
-    teamModel.bulkAddStudentsToTeams(studentTeamMappings);
+    const teamNumbers = Object.keys(teamsData);
+    if (teamNumbers.length === 0) {
+      throw new AppError('팀 데이터가 비어있습니다.', 400);
+    }
+
+    const db = getDatabase();
+    const transaction = db.transaction(() => {
+      let totalStudents = 0;
+
+      for (const teamNumberStr of teamNumbers) {
+        const teamNumber = parseInt(teamNumberStr, 10);
+        const studentUserIds = teamsData[teamNumberStr];
+
+        // Validate student array
+        if (!Array.isArray(studentUserIds) || studentUserIds.length === 0) {
+          throw new AppError(`팀 ${teamNumber}의 학생 데이터가 잘못되었습니다.`, 400);
+        }
+
+        // Validate all student IDs are numbers
+        if (!studentUserIds.every(id => Number.isInteger(id))) {
+          throw new AppError(`팀 ${teamNumber}의 학생 ID가 잘못되었습니다.`, 400);
+        }
+
+        // Find all students
+        const students = userModel.findByUserNumbers(studentUserIds);
+
+        // Check if all students exist
+        if (students.length !== studentUserIds.length) {
+          throw new AppError(`팀 ${teamNumber}에 존재하지 않는 학생이 있습니다.`, 404);
+        }
+
+        // Check if all are students
+        const nonStudent = students.find(s => s.role !== 'student');
+        if (nonStudent) {
+          throw new AppError(`팀 ${teamNumber}에 학생이 아닌 사용자가 포함되어 있습니다.`, 400);
+        }
+
+        // Create or get team
+        const teamName = `Team ${teamNumber}`;
+        const teamId = teamModel.createOrUpdateTeam(teamNumber, teamName);
+
+        // Remove existing students from this team
+        teamModel.removeAllStudentsFromTeam(teamId);
+
+        // Add new students
+        const studentIds = students.map(s => s.id);
+        teamModel.addStudentsToTeam(studentIds, teamId);
+
+        totalStudents += studentIds.length;
+      }
+
+      return totalStudents;
+    });
+
+    const totalStudents = transaction();
 
     return {
       message: '학생 팀 정보가 성공적으로 등록되었습니다',
-      sumStudent: studentTeamMappings.length,
+      sumStudent: totalStudents,
+      teamCount: teamNumbers.length,
     };
   },
 

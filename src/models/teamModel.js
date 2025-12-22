@@ -130,6 +130,31 @@ export const teamModel = {
     return stmt.all();
   },
 
+  removeAllStudentsFromTeam(teamId) {
+    const db = getDatabase();
+    const stmt = db.prepare(`
+      DELETE FROM student_teams
+      WHERE team_id = ?
+    `);
+    return stmt.run(teamId);
+  },
+
+  createOrUpdateTeam(teamNumber, teamName) {
+    const db = getDatabase();
+    let team = this.findByTeamNumber(teamNumber, 0);
+
+    if (!team) {
+      const stmt = db.prepare(`
+        INSERT INTO teams (name, team_number, class_number, team_credit)
+        VALUES (?, ?, 0, 3000)
+      `);
+      const result = stmt.run(teamName, teamNumber);
+      return result.lastInsertRowid;
+    }
+
+    return team.id;
+  },
+
   updateTeamCredit(teamId, credit) {
     const db = getDatabase();
     const stmt = db.prepare(`

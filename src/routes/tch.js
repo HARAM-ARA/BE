@@ -429,7 +429,7 @@ router.get('/student', authenticateToken, requireTeacher, getAllStudents);
  * @swagger
  * /tch/append:
  *   post:
- *     summary: 학생 팀 정보 일괄 등록 (교사 전용, 구글 시트)
+ *     summary: 학생 팀 정보 일괄 등록 (교사 전용, JSON)
  *     tags: [Team]
  *     security:
  *       - bearerAuth: []
@@ -440,12 +440,14 @@ router.get('/student', authenticateToken, requireTeacher, getAllStudents);
  *           schema:
  *             type: object
  *             required:
- *               - sheetUrl
+ *               - teams
  *             properties:
- *               sheetUrl:
- *                 type: string
- *                 description: 학생 팀 정보가 담긴 구글 시트 URL (TEAM_NUMBER, CLASS_NUMBER, NAME 컬럼 필수, 공유 설정 필요)
- *                 example: https://docs.google.com/spreadsheets/d/1ABC123xyz/edit?usp=sharing
+ *               teams:
+ *                 type: object
+ *                 description: 팀 번호를 키로, 학생 userId 배열을 값으로 하는 객체
+ *                 example:
+ *                   "1": [1101, 1202, 1303, 1404]
+ *                   "2": [2101, 2202, 2303, 2404]
  *     responses:
  *       200:
  *         description: 학생 팀 정보 등록 성공
@@ -465,9 +467,13 @@ router.get('/student', authenticateToken, requireTeacher, getAllStudents);
  *                     sumStudent:
  *                       type: integer
  *                       description: 총 등록된 학생 수
- *                       example: 25
+ *                       example: 8
+ *                     teamCount:
+ *                       type: integer
+ *                       description: 총 팀 수
+ *                       example: 2
  *       400:
- *         description: URL 누락 또는 잘못된 요청
+ *         description: 잘못된 요청
  *         content:
  *           application/json:
  *             schema:
@@ -479,19 +485,13 @@ router.get('/student', authenticateToken, requireTeacher, getAllStudents);
  *             schema:
  *               $ref: '#/components/schemas/Error'
  *       403:
- *         description: 권한 없음 또는 구글 시트 접근 권한 오류
+ *         description: 권한 없음
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Error'
  *       404:
- *         description: 구글 시트를 찾을 수 없음
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
- *       409:
- *         description: 이미 팀에 배정된 학생
+ *         description: 존재하지 않는 학생
  *         content:
  *           application/json:
  *             schema:
