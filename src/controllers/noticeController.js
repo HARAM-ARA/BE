@@ -68,3 +68,31 @@ export async function postNotice(req, res, next) {
     next(error);
   }
 }
+
+export async function getNotices(req, res, next) {
+  try {
+    const notices = noticeModel.getAllNotices();
+
+    if (!notices || notices.length === 0) {
+      return res.status(404).json({
+        code: 'NOT_FOUND',
+        message: '아무런 공지가 존재하지 않습니다.'
+      });
+    }
+
+    const noticeList = notices.map(notice => ({
+      noticeId: notice.id,
+      title: notice.title,
+      content: notice.content,
+      author: notice.author,
+      teacher: notice.is_teacher === 1
+    }));
+
+    return res.status(200).json({
+      notices: noticeList
+    });
+
+  } catch (error) {
+    next(error);
+  }
+}

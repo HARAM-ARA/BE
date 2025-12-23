@@ -2,7 +2,7 @@ import express from 'express';
 import { getTeams } from '../controllers/teamController.js';
 import { storeController } from '../controllers/storeController.js';
 import { getAccount } from '../controllers/tchController.js';
-import { postNotice } from '../controllers/noticeController.js';
+import { postNotice, getNotices } from '../controllers/noticeController.js';
 import { authenticateToken } from '../middlewares/auth.js';
 
 const router = express.Router();
@@ -213,6 +213,55 @@ router.get('/store/:type', storeController.getItemsByType);
 /**
  * @swagger
  * /haram/notice:
+ *   get:
+ *     summary: 전체 공지 조회 (인증 불필요)
+ *     tags: [Notice]
+ *     responses:
+ *       200:
+ *         description: 공지 목록 조회 성공
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 notices:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       noticeId:
+ *                         type: integer
+ *                         description: 공지 ID
+ *                         example: 1
+ *                       title:
+ *                         type: string
+ *                         description: 공지 제목
+ *                         example: 제목
+ *                       content:
+ *                         type: string
+ *                         description: 공지 내용
+ *                         example: 내용
+ *                       author:
+ *                         type: string
+ *                         description: 작성자
+ *                         example: 김김김
+ *                       teacher:
+ *                         type: boolean
+ *                         description: 교사 여부
+ *                         example: true
+ *       404:
+ *         description: 공지가 존재하지 않음
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 code:
+ *                   type: string
+ *                   example: NOT_FOUND
+ *                 message:
+ *                   type: string
+ *                   example: 아무런 공지가 존재하지 않습니다.
  *   post:
  *     summary: 공지 전송 (교사 또는 학생)
  *     tags: [Notice]
@@ -279,6 +328,7 @@ router.get('/store/:type', storeController.getItemsByType);
  *                   type: string
  *                   example: 팀을 찾을 수 없습니다.
  */
+router.get('/notice', getNotices);
 router.post('/notice', authenticateToken, postNotice);
 
 export default router;
