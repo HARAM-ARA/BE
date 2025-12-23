@@ -74,13 +74,15 @@ export const userModel = {
 
   findByUserNumbers(userNumbers) {
     const db = getDatabase();
-    const placeholders = userNumbers.map(() => '?').join(',');
+    // Convert numbers to strings for comparison with TEXT column
+    const userNumberStrings = userNumbers.map(num => String(num));
+    const placeholders = userNumberStrings.map(() => '?').join(',');
     const stmt = db.prepare(`
       SELECT u.id, u.user_number, u.name, u.role
       FROM users u
       WHERE u.user_number IN (${placeholders})
     `);
-    const students = stmt.all(...userNumbers);
+    const students = stmt.all(...userNumberStrings);
 
     // Get all teams to find which team each student belongs to
     const teamsStmt = db.prepare('SELECT id, student_ids FROM teams');
