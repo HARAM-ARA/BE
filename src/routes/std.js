@@ -158,8 +158,46 @@ router.post('/select/pull/anger', authenticateToken, requireStudent, stdControll
  *     responses:
  *       200:
  *         description: 성공
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 gameId:
+ *                   type: integer
+ *                   description: 게임 ID
+ *                   example: 1
+ *                 words:
+ *                   type: array
+ *                   items:
+ *                     type: string
+ *                   description: 타자 단어 목록
+ *                   example: ["apple", "banana", "cherry", "date", "elderberry"]
+ *                 startTime:
+ *                   type: integer
+ *                   description: 게임 시작 시간 (ms timestamp)
+ *                   example: 1640000000000
+ *                 endTime:
+ *                   type: integer
+ *                   description: 게임 종료 시간 (ms timestamp)
+ *                   example: 1640000600000
+ *                 canJoin:
+ *                   type: boolean
+ *                   description: 참가 가능 여부 (팀에서 이미 참가한 경우 false)
+ *                   example: true
  *       404:
  *         description: 진행 중인 게임 없음
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 code:
+ *                   type: string
+ *                   example: NO_ACTIVE_GAME
+ *                 message:
+ *                   type: string
+ *                   example: 현재 진행 중인 게임이 없습니다.
  */
 router.get('/typing/game', authenticateToken, typingController.getGame);
 

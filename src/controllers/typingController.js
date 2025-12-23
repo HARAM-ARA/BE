@@ -7,7 +7,8 @@ export const typingController = {
    */
   async getGame(req, res, next) {
     try {
-      const game = typingService.getCurrentGame();
+      const user = req.user;
+      const game = await typingService.getCurrentGame(user);
 
       if (!game) {
         return res.status(404).json({
@@ -20,7 +21,8 @@ export const typingController = {
         gameId: game.gameId,
         words: game.words,
         startTime: game.startTime,
-        endTime: game.endTime
+        endTime: game.endTime,
+        canJoin: game.canJoin
       });
     } catch (error) {
       next(error);

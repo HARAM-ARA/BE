@@ -148,7 +148,7 @@ export const typingService = {
   /**
    * 현재 진행 중인 게임 조회
    */
-  getCurrentGame() {
+  async getCurrentGame(user = null) {
     // 실시간으로 게임 시작/종료 확인
     this.checkAndUpdateGames();
 
@@ -157,12 +157,25 @@ export const typingService = {
       return null;
     }
 
+    // canJoin 계산: user가 있으면 팀의 제출 여부 확인
+    let canJoin = true;
+    if (user) {
+      const { teamModel } = await import('../models/teamModel.js');
+      const studentTeam = teamModel.findStudentTeam(user.id);
+
+      if (studentTeam) {
+        const hasSubmitted = typingSubmissionModel.hasTeamSubmitted(game.id, studentTeam.team_id);
+        canJoin = !hasSubmitted;
+      }
+    }
+
     return {
       gameId: game.id,
       words: game.words,
       startTime: game.start_time,
       endTime: game.end_time,
-      status: game.status
+      status: game.status,
+      canJoin
     };
   },
 
