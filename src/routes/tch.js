@@ -9,7 +9,7 @@ import {
   addCredit,
   uploadStoreImage,
 } from '../controllers/tchController.js';
-import { appendStudents, getTeam, addSingleStudent, createTeam } from '../controllers/teamController.js';
+import { appendStudents, getTeam, addSingleStudent, createTeam, getTeamStudents } from '../controllers/teamController.js';
 import { getAllStudents } from '../controllers/userController.js';
 import { authenticateToken, requireTeacher } from '../middlewares/auth.js';
 import { upload, validateImageSize } from '../middlewares/upload.js';
@@ -742,5 +742,52 @@ router.get('/team/:id', getTeam);
  *                   example: 이미 존재하는 팀이름 입니다.
  */
 router.post('/team', authenticateToken, requireTeacher, createTeam);
+
+/**
+ * @swagger
+ * /tch/team/student/{id}:
+ *   get:
+ *     summary: 해당 팀의 학생 목록 조회 (교사 전용)
+ *     tags: [Team]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: 팀 ID
+ *     responses:
+ *       200:
+ *         description: 팀 학생 목록 조회 성공
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 student:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       userId:
+ *                         type: integer
+ *                         description: 학번
+ *                         example: 1201
+ *                       name:
+ *                         type: string
+ *                         description: 이름
+ *                         example: 강태은
+ *       400:
+ *         description: 잘못된 요청
+ *       401:
+ *         description: 인증 실패
+ *       403:
+ *         description: 권한 없음
+ *       404:
+ *         description: 팀이 없음
+ */
+router.get('/team/student/:id', authenticateToken, requireTeacher, getTeamStudents);
 
 export default router;

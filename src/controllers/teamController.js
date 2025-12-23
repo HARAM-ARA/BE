@@ -89,3 +89,22 @@ export async function getTeams(req, res, next) {
     next(error);
   }
 }
+
+export async function getTeamStudents(req, res, next) {
+  try {
+    const { id } = req.params;
+    const teamId = parseInt(id, 10);
+
+    if (isNaN(teamId)) {
+      throw new AppError('잘못된 요청입니다.', 400);
+    }
+
+    const students = teamService.getTeamStudents(teamId);
+
+    res.status(200).json({
+      student: students,
+    });
+  } catch (error) {
+    next(error);
+  }
+}

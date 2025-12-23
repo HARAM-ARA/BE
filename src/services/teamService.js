@@ -195,4 +195,26 @@ export const teamService = {
       message: '팀 추가에 성공했습니다.',
     };
   },
+
+  getTeamStudents(teamId) {
+    // Check if team exists
+    const team = teamModel.findById(teamId);
+    if (!team) {
+      throw new AppError('팀이 없습니다.', 404);
+    }
+
+    // Get team members
+    const members = teamModel.getTeamMembers(teamId);
+
+    // Transform to response format: { userId: user_number, name }
+    // Sort by user_number (학번 순)
+    const students = members
+      .map(member => ({
+        userId: parseInt(member.user_number || member.id),
+        name: member.name
+      }))
+      .sort((a, b) => a.userId - b.userId);
+
+    return students;
+  },
 };

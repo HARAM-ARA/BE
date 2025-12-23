@@ -75,7 +75,7 @@ export const teamModel = {
 
     const placeholders = studentIds.map(() => '?').join(',');
     const stmt = db.prepare(`
-      SELECT u.id, u.email, u.name, ? as team_id
+      SELECT u.id, u.email, u.name, u.user_number, ? as team_id
       FROM users u
       WHERE u.id IN (${placeholders})
     `);
