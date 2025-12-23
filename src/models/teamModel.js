@@ -298,4 +298,24 @@ export const teamModel = {
     });
     return transaction();
   },
+
+  // === Notice Count 관리 ===
+  getNoticeCount(teamId) {
+    const db = getDatabase();
+    const stmt = db.prepare('SELECT notice_count FROM teams WHERE id = ?');
+    const result = stmt.get(teamId);
+    return result ? result.notice_count : 0;
+  },
+
+  incrementNoticeCount(teamId) {
+    const db = getDatabase();
+    const stmt = db.prepare('UPDATE teams SET notice_count = notice_count + 1 WHERE id = ?');
+    return stmt.run(teamId);
+  },
+
+  decrementNoticeCount(teamId) {
+    const db = getDatabase();
+    const stmt = db.prepare('UPDATE teams SET notice_count = notice_count - 1 WHERE id = ? AND notice_count > 0');
+    return stmt.run(teamId);
+  },
 };

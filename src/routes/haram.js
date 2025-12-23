@@ -2,6 +2,7 @@ import express from 'express';
 import { getTeams } from '../controllers/teamController.js';
 import { storeController } from '../controllers/storeController.js';
 import { getAccount } from '../controllers/tchController.js';
+import { postNotice } from '../controllers/noticeController.js';
 import { authenticateToken } from '../middlewares/auth.js';
 
 const router = express.Router();
@@ -208,5 +209,76 @@ router.get('/store', storeController.getAllItems);
  *                   example: 아무런 물품이 존재하지 않습니다.
  */
 router.get('/store/:type', storeController.getItemsByType);
+
+/**
+ * @swagger
+ * /haram/notice:
+ *   post:
+ *     summary: 공지 전송 (교사 또는 학생)
+ *     tags: [Notice]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               title:
+ *                 type: string
+ *                 description: 공지 제목 (교사만 필수)
+ *                 example: 중요 공지
+ *               content:
+ *                 type: string
+ *                 description: 공지 내용 (필수)
+ *                 example: 내일 시험이 있습니다.
+ *             required:
+ *               - content
+ *     responses:
+ *       200:
+ *         description: 공지 전송 성공
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: 공지가 전송되었습니다.
+ *       400:
+ *         description: 잘못된 입력 (제목 또는 내용 누락)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: 제목이 잘못되었습니다.
+ *       401:
+ *         description: 토큰 누락 또는 무효
+ *       403:
+ *         description: 접근 권한 부족 (학생이 notice_count 없음)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: 접근 권한이 부족합니다.
+ *       404:
+ *         description: 팀을 찾을 수 없음
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: 팀을 찾을 수 없습니다.
+ */
+router.post('/notice', authenticateToken, postNotice);
 
 export default router;

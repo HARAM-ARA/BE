@@ -30,9 +30,20 @@ CREATE TABLE IF NOT EXISTS teams (
   student_ids TEXT DEFAULT '[]',
   permission_flags INTEGER DEFAULT 0,
   steal_percent INTEGER DEFAULT 0,
+  notice_count INTEGER DEFAULT 0,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   UNIQUE(team_number, class_number)
+);
+
+CREATE TABLE IF NOT EXISTS notices (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  title TEXT NOT NULL,
+  content TEXT NOT NULL,
+  author TEXT NOT NULL,
+  is_teacher INTEGER NOT NULL CHECK(is_teacher IN (0, 1)),
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
@@ -56,4 +67,10 @@ CREATE TRIGGER IF NOT EXISTS update_teams_timestamp
 AFTER UPDATE ON teams
 BEGIN
   UPDATE teams SET updated_at = CURRENT_TIMESTAMP WHERE id = NEW.id;
+END;
+
+CREATE TRIGGER IF NOT EXISTS update_notices_timestamp
+AFTER UPDATE ON notices
+BEGIN
+  UPDATE notices SET updated_at = CURRENT_TIMESTAMP WHERE id = NEW.id;
 END;
