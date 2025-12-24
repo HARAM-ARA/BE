@@ -206,8 +206,8 @@ export const storeService = {
       // 구매 기록 저장
       purchaseModel.createPurchase(teamId, itemId, quantity, totalPrice);
 
-      // id가 0인 물건 구매 시 notice_count 증가
-      if (itemId === 0) {
+      // id가 999인 물건 구매 시 notice_count 증가
+      if (itemId === 999) {
         teamModel.incrementNoticeCount(teamId);
       }
 
