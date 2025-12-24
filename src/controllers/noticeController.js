@@ -1,6 +1,7 @@
 import { noticeModel } from '../models/noticeModel.js';
 import { teamModel } from '../models/teamModel.js';
 import { AppError } from '../middlewares/errorHandler.js';
+import { broadcastNewNotice } from '../config/socket.js';
 
 export async function postNotice(req, res, next) {
   try {
@@ -18,7 +19,19 @@ export async function postNotice(req, res, next) {
       }
 
       // 공지 생성
-      noticeModel.createNotice(title.trim(), content.trim(), user.name, true);
+      const noticeId = noticeModel.createNotice(title.trim(), content.trim(), user.name, true);
+
+      // 생성된 공지 조회 및 웹소켓 브로드캐스트
+      const createdNotice = noticeModel.findById(noticeId);
+      if (createdNotice) {
+        broadcastNewNotice({
+          noticeId: createdNotice.id,
+          title: createdNotice.title,
+          content: createdNotice.content,
+          author: createdNotice.author,
+          teacher: createdNotice.is_teacher === 1
+        });
+      }
 
       return res.status(200).json({
         message: '공지가 전송되었습니다.'
@@ -51,10 +64,22 @@ export async function postNotice(req, res, next) {
       }
 
       // 공지 생성 (title은 팀 이름)
-      noticeModel.createNotice(team.name, content.trim(), team.name, false);
+      const noticeId = noticeModel.createNotice(team.name, content.trim(), team.name, false);
 
       // notice_count 차감
       teamModel.decrementNoticeCount(studentTeam.team_id);
+
+      // 생성된 공지 조회 및 웹소켓 브로드캐스트
+      const createdNotice = noticeModel.findById(noticeId);
+      if (createdNotice) {
+        broadcastNewNotice({
+          noticeId: createdNotice.id,
+          title: createdNotice.title,
+          content: createdNotice.content,
+          author: createdNotice.author,
+          teacher: createdNotice.is_teacher === 1
+        });
+      }
 
       return res.status(200).json({
         message: '공지가 전송되었습니다.'

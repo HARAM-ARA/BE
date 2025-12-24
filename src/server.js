@@ -1,4 +1,5 @@
 import express from 'express';
+import { createServer } from 'http';
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import swaggerUi from 'swagger-ui-express';
@@ -6,6 +7,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { config } from './config/index.js';
 import { swaggerSpec } from './config/swagger.js';
+import { initSocketServer } from './config/socket.js';
 import { initDatabase } from './models/db.js';
 import { boardModel } from './models/boardModel.js';
 import { wordModel } from './models/wordModel.js';
@@ -82,7 +84,11 @@ purchaseModel.initPurchases();
 // 강화 시스템 초기화
 enforceModel.initEnforce();
 
-app.listen(config.port, () => {
+// HTTP 서버 생성 및 Socket.IO 초기화
+const httpServer = createServer(app);
+initSocketServer(httpServer);
+
+httpServer.listen(config.port, () => {
   console.log(`Server running on port ${config.port}`);
   console.log(`Environment: ${config.nodeEnv}`);
   console.log(`Swagger docs available at http://localhost:${config.port}/api-docs`);
