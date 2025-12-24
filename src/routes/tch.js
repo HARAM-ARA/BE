@@ -8,6 +8,7 @@ import {
   getAccount,
   addCredit,
   uploadStoreImage,
+  getPurchases,
 } from '../controllers/tchController.js';
 import { appendStudents, getTeam, addSingleStudent, createTeam, getTeamStudents } from '../controllers/teamController.js';
 import { getAllStudents } from '../controllers/userController.js';
@@ -354,6 +355,63 @@ router.put('/store/:id', authenticateToken, requireTeacher, updateStore);
  *               $ref: '#/components/schemas/Error'
  */
 router.delete('/store/:id', authenticateToken, requireTeacher, deleteStore);
+
+/**
+ * @swagger
+ * /tch/store/purchases:
+ *   get:
+ *     summary: 전체 구매 내역 조회 (교사 전용)
+ *     tags: [Store]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: 구매 내역 조회 성공
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 items:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       teamId:
+ *                         type: integer
+ *                         description: 팀 ID
+ *                         example: 1
+ *                       itemId:
+ *                         type: integer
+ *                         description: 물품 ID
+ *                         example: 1
+ *                       quantity:
+ *                         type: integer
+ *                         description: 구매 수량
+ *                         example: 1
+ *                       when:
+ *                         type: string
+ *                         description: 구매 일시 (UTC, ISO 8601 형식)
+ *                         example: "2025-12-24T03:15:43Z"
+ *       404:
+ *         description: 구매한 물품이 없음
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 code:
+ *                   type: string
+ *                   example: NOT_FOUND
+ *                 message:
+ *                   type: string
+ *                   example: 구매한 물품이 없습니다.
+ *       401:
+ *         description: 인증 실패
+ *       403:
+ *         description: 권한 부족 (교사만 접근 가능)
+ */
+router.get('/store/purchases', authenticateToken, requireTeacher, getPurchases);
 
 /**
  * @swagger

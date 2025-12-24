@@ -1,5 +1,6 @@
 import { storeService } from '../services/storeService.js';
 import { teamModel } from '../models/teamModel.js';
+import { purchaseModel } from '../models/purchaseModel.js';
 import { AppError } from '../middlewares/errorHandler.js';
 import { config } from '../config/index.js';
 
@@ -195,6 +196,32 @@ export async function uploadStoreImage(req, res, next) {
     res.json({
       imageUrl: imageUrl,
       message: '이미지 업로드에 성공했습니다.'
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function getPurchases(req, res, next) {
+  try {
+    const purchases = purchaseModel.getAllPurchases();
+
+    if (!purchases || purchases.length === 0) {
+      return res.status(404).json({
+        code: 'NOT_FOUND',
+        message: '구매한 물품이 없습니다.'
+      });
+    }
+
+    const items = purchases.map(purchase => ({
+      teamId: purchase.team_id,
+      itemId: purchase.item_id,
+      quantity: purchase.quantity,
+      when: purchase.purchased_at.replace(' ', 'T') + 'Z'
+    }));
+
+    res.json({
+      items
     });
   } catch (error) {
     next(error);

@@ -38,5 +38,15 @@ export const purchaseModel = {
       ORDER BY p.purchased_at DESC
     `);
     return stmt.all(teamId);
+  },
+
+  getAllPurchases() {
+    const db = getDatabase();
+    const stmt = db.prepare(`
+      SELECT team_id, item_id, quantity, purchased_at
+      FROM purchases
+      ORDER BY purchased_at DESC
+    `);
+    return stmt.all();
   }
 };
