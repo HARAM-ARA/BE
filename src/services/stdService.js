@@ -34,7 +34,7 @@ export const stdService = {
         let result = null;
         const transaction = db.transaction(() => {
             // 2. 크레딧 차감
-            db.prepare('UPDATE teams SET team_credit = team_credit - 500 WHERE id = ?').run(teamId);
+            db.prepare('UPDATE teams SET team_credit = team_credit - 1000 WHERE id = ?').run(teamId);
 
             // 3. 카드 뽑기 처리
             const marked = boardModel.markCardPulled(cardNumber, teamId);
