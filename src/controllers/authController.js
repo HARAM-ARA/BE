@@ -2,6 +2,7 @@ import { authenticateWithGoogle } from '../services/oauthService.js';
 import { AppError } from '../middlewares/errorHandler.js';
 import { config } from '../config/index.js';
 import { userModel } from '../models/userModel.js';
+import { teamModel } from '../models/teamModel.js';
 
 export async function login(req, res, next) {
   try {
@@ -41,10 +42,26 @@ export async function getProfile(req, res, next) {
       return res.status(404).json({ success: false, error: '사용자를 찾을 수 없습니다.' });
     }
 
+    // 학생인 경우 팀장인지 확인
+    let userRole = user.role;
+    if (user.role === 'student') {
+      const studentTeam = teamModel.findStudentTeam(user.id);
+
+      if (studentTeam) {
+        const leaderId = teamModel.getLeader(studentTeam.team_id);
+        if (leaderId === user.id) {
+          userRole = 'teamleader';
+        }
+      }
+    }
+
     res.json({
       success: true,
       data: {
-        user,
+        user: {
+          ...user,
+          role: userRole
+        },
       },
     });
   } catch (error) {
