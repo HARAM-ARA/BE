@@ -31,6 +31,7 @@ CREATE TABLE IF NOT EXISTS teams (
   permission_flags INTEGER DEFAULT 0,
   steal_percent INTEGER DEFAULT 0,
   notice_count INTEGER DEFAULT 0,
+  leader_id INTEGER DEFAULT NULL,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   UNIQUE(team_number, class_number)

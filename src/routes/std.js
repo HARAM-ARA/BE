@@ -370,4 +370,106 @@ router.post('/enforce/buy', authenticateToken, enforceController.buyTier);
  */
 router.post('/enforce/credit', authenticateToken, enforceController.convertToCredit);
 
+// 팀
+
+/**
+ * @swagger
+ * /std/team/leader:
+ *   post:
+ *     summary: 팀장 설정 (학생 전용)
+ *     tags: [Team]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - student
+ *             properties:
+ *               student:
+ *                 type: integer
+ *                 description: 팀장으로 지정할 학생의 userId (DB id)
+ *                 example: 1
+ *     responses:
+ *       200:
+ *         description: 팀장 설정 성공
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: 팀장을 설정했습니다.
+ *       400:
+ *         description: 잘못된 요청
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 code:
+ *                   type: string
+ *                   example: BAD_REQUEST
+ *                 message:
+ *                   type: string
+ *                   example: 잘못된 요청입니다.
+ *       401:
+ *         description: 인증 실패
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 code:
+ *                   type: string
+ *                   example: INVALID_TOKEN
+ *                 message:
+ *                   type: string
+ *                   example: 토큰이 유효하지 않습니다.
+ *       403:
+ *         description: 권한 부족 또는 팀 미소속
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 code:
+ *                   type: string
+ *                   example: NON_EXIST_TEAM
+ *                 message:
+ *                   type: string
+ *                   example: 팀에 소속되어 있지 않습니다.
+ *       404:
+ *         description: 존재하지 않는 학생이거나 팀원이 아님
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 code:
+ *                   type: string
+ *                   example: NOT_FOUND
+ *                 message:
+ *                   type: string
+ *                   example: 존재하지 않는 학생입니다.
+ *       409:
+ *         description: 팀장이 이미 설정됨
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 code:
+ *                   type: string
+ *                   example: ALREADY_EXIST
+ *                 message:
+ *                   type: string
+ *                   example: 팀장이 이미 있습니다.
+ */
+router.post('/team/leader', authenticateToken, requireStudent, stdController.setTeamLeader);
+
 export default router;

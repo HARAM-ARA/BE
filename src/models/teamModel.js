@@ -318,4 +318,25 @@ export const teamModel = {
     const stmt = db.prepare('UPDATE teams SET notice_count = notice_count - 1 WHERE id = ? AND notice_count > 0');
     return stmt.run(teamId);
   },
+
+  // === 팀장 관리 ===
+  hasLeader(teamId) {
+    const db = getDatabase();
+    const stmt = db.prepare('SELECT leader_id FROM teams WHERE id = ?');
+    const result = stmt.get(teamId);
+    return result && result.leader_id !== null;
+  },
+
+  setLeader(teamId, leaderId) {
+    const db = getDatabase();
+    const stmt = db.prepare('UPDATE teams SET leader_id = ? WHERE id = ?');
+    return stmt.run(leaderId, teamId);
+  },
+
+  getLeader(teamId) {
+    const db = getDatabase();
+    const stmt = db.prepare('SELECT leader_id FROM teams WHERE id = ?');
+    const result = stmt.get(teamId);
+    return result ? result.leader_id : null;
+  },
 };
