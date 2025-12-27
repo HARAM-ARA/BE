@@ -32,10 +32,10 @@ const app = express();
 // CORS middleware for development - allow configured client origin (for credentialed requests)
 if (config.nodeEnv === 'development') {
   app.use((req, res, next) => {
-    const allowedOrigin = config.clientOrigin || 'http://localhost:5173';
+    const allowedOrigins = config.clientOrigin;
     const origin = req.headers.origin;
-    if (origin && origin === allowedOrigin) {
-      res.setHeader('Access-Control-Allow-Origin', allowedOrigin);
+    if (origin && allowedOrigins.includes(origin)) {
+      res.setHeader('Access-Control-Allow-Origin', origin);
       res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
       res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
       res.setHeader('Access-Control-Allow-Credentials', 'true');
