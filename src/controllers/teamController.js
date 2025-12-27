@@ -1,5 +1,6 @@
 import { teamService } from '../services/teamService.js';
 import { AppError } from '../middlewares/errorHandler.js';
+import { excelService } from '../services/excelService.js';
 
 export async function appendStudents(req, res, next) {
   try {
@@ -104,6 +105,42 @@ export async function getTeamStudents(req, res, next) {
     res.status(200).json({
       student: students,
     });
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function deleteTeam(req, res, next) {
+  try {
+    const { id } = req.params;
+    const teamId = parseInt(id, 10);
+
+    if (isNaN(teamId)) {
+      throw new AppError('잘못된 요청입니다.', 400);
+    }
+
+    const result = teamService.deleteTeam(teamId);
+
+    res.status(200).json(result);
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function downloadStudentExcel(req, res, next) {
+  try {
+    const excelBuffer = excelService.generateStudentTeamExcel();
+    
+    // 현재 날짜로 파일명 생성
+    const now = new Date();
+    const dateStr = now.toISOString().split('T')[0]; // YYYY-MM-DD 형식
+    const filename = `학생팀정보_${dateStr}.xlsx`;
+    
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(filename)}"`);
+    res.setHeader('Content-Length', excelBuffer.length);
+    
+    res.send(excelBuffer);
   } catch (error) {
     next(error);
   }

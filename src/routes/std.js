@@ -472,4 +472,70 @@ router.post('/enforce/credit', authenticateToken, enforceController.convertToCre
  */
 router.post('/team/leader', authenticateToken, requireStudent, stdController.setTeamLeader);
 
+/**
+ * @swagger
+ * /std/team:
+ *   get:
+ *     summary: 내 팀 정보 조회 (학생 전용)
+ *     tags: [Team]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: 팀 정보 조회 성공
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 team:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: integer
+ *                       description: 팀 ID
+ *                       example: 1
+ *                     name:
+ *                       type: string
+ *                       description: 팀 이름
+ *                       example: 하람팀
+ *                     credit:
+ *                       type: integer
+ *                       description: 팀 크레딧
+ *                       example: 3000
+ *                     leaderId:
+ *                       type: integer
+ *                       nullable: true
+ *                       description: 팀장 ID
+ *                       example: 1
+ *                 members:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: integer
+ *                         description: 학생 ID
+ *                         example: 1
+ *                       name:
+ *                         type: string
+ *                         description: 학생 이름
+ *                         example: 홍길동
+ *                       userNumber:
+ *                         type: string
+ *                         description: 학번
+ *                         example: "1201"
+ *                       isLeader:
+ *                         type: boolean
+ *                         description: 팀장 여부
+ *                         example: true
+ *       401:
+ *         description: 인증 실패
+ *       403:
+ *         description: 권한 부족 (학생만 접근 가능)
+ *       404:
+ *         description: 팀에 소속되어 있지 않음
+ */
+router.get('/team', authenticateToken, requireStudent, stdController.getMyTeam);
+
 export default router;

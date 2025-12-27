@@ -339,4 +339,11 @@ export const teamModel = {
     const result = stmt.get(teamId);
     return result ? result.leader_id : null;
   },
+
+  // === 팀 삭제 ===
+  deleteTeam(teamId) {
+    const db = getDatabase();
+    const stmt = db.prepare('DELETE FROM teams WHERE id = ?');
+    return stmt.run(teamId);
+  },
 };
