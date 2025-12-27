@@ -355,6 +355,7 @@ export const stdService = {
 
         return {
             teamId: team.id,
+            teamName: team.name,
             credit: team.team_credit
         };
     }
