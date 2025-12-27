@@ -10,7 +10,7 @@ import {
   uploadStoreImage,
   getPurchases,
 } from '../controllers/tchController.js';
-import { appendStudents, getTeam, addSingleStudent, createTeam, getTeamStudents } from '../controllers/teamController.js';
+import { appendStudents, getTeam, addSingleStudent, createTeam, getTeamStudents, deleteTeam, downloadStudentExcel } from '../controllers/teamController.js';
 import { getAllStudents } from '../controllers/userController.js';
 import { authenticateToken, requireTeacher } from '../middlewares/auth.js';
 import { upload, validateImageSize } from '../middlewares/upload.js';
@@ -847,5 +847,67 @@ router.post('/team', authenticateToken, requireTeacher, createTeam);
  *         description: 팀이 없음
  */
 router.get('/team/student/:id', authenticateToken, requireTeacher, getTeamStudents);
+
+/**
+ * @swagger
+ * /tch/team/{id}:
+ *   delete:
+ *     summary: 팀 삭제 (교사 전용)
+ *     tags: [Team]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: 팀 ID
+ *     responses:
+ *       200:
+ *         description: 팀 삭제 성공
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: 팀이 성공적으로 삭제되었습니다.
+ *       400:
+ *         description: 잘못된 요청
+ *       401:
+ *         description: 인증 실패
+ *       403:
+ *         description: 권한 없음
+ *       404:
+ *         description: 팀을 찾을 수 없음
+ */
+router.delete('/team/:id', authenticateToken, requireTeacher, deleteTeam);
+
+/**
+ * @swagger
+ * /tch/excel/students:
+ *   get:
+ *     summary: 학생 팀 정보 엑셀 다운로드 (교사 전용)
+ *     tags: [Excel]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: 엑셀 파일 다운로드 성공
+ *         content:
+ *           application/vnd.openxmlformats-officedocument.spreadsheetml.sheet:
+ *             schema:
+ *               type: string
+ *               format: binary
+ *       401:
+ *         description: 인증 실패
+ *       403:
+ *         description: 권한 없음
+ *       500:
+ *         description: 서버 오류
+ */
+router.get('/excel/students', authenticateToken, requireTeacher, downloadStudentExcel);
 
 export default router;

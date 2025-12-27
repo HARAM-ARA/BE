@@ -217,4 +217,51 @@ export const teamService = {
 
     return students;
   },
+
+  deleteTeam(teamId) {
+    // Check if team exists
+    const team = teamModel.findById(teamId);
+    if (!team) {
+      throw new AppError('팀을 찾을 수 없습니다.', 404);
+    }
+
+    // Delete team
+    teamModel.deleteTeam(teamId);
+
+    return {
+      message: '팀이 성공적으로 삭제되었습니다.',
+    };
+  },
+
+  getStudentTeam(studentId) {
+    // Find student's team
+    const teamInfo = teamModel.findStudentTeam(studentId);
+    if (!teamInfo) {
+      throw new AppError('팀에 소속되어 있지 않습니다.', 404);
+    }
+
+    // Get team details
+    const team = teamModel.findById(teamInfo.team_id);
+    if (!team) {
+      throw new AppError('팀 정보를 찾을 수 없습니다.', 404);
+    }
+
+    // Get team members
+    const members = teamModel.getTeamMembers(teamInfo.team_id);
+
+    return {
+      team: {
+        id: team.id,
+        name: team.name,
+        credit: team.team_credit,
+        leaderId: team.leader_id,
+      },
+      members: members.map(member => ({
+        id: member.id,
+        name: member.name,
+        userNumber: member.user_number,
+        isLeader: member.id === team.leader_id,
+      })),
+    };
+  },
 };

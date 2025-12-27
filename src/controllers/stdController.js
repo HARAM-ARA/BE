@@ -2,6 +2,7 @@ import { stdService } from '../services/stdService.js';
 import { storeService } from '../services/storeService.js';
 import { teamModel } from '../models/teamModel.js';
 import { userModel } from '../models/userModel.js';
+import { teamService } from '../services/teamService.js';
 
 export const stdController = {
     async pullCard(req, res, next) {
@@ -144,6 +145,17 @@ export const stdController = {
             res.json({
                 message: '팀장을 설정했습니다.'
             });
+        } catch (error) {
+            next(error);
+        }
+    },
+
+    async getMyTeam(req, res, next) {
+        try {
+            const user = req.user;
+
+            const result = await teamService.getStudentTeam(user.id);
+            res.json(result);
         } catch (error) {
             next(error);
         }
