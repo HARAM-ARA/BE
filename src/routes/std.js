@@ -24,17 +24,36 @@ const router = express.Router();
  *             schema:
  *               type: object
  *               properties:
- *                 user:
- *                   $ref: '#/components/schemas/User'
- *                 team:
- *                   type: object
- *                   properties:
- *                     id:
- *                       type: integer
- *                     name:
- *                       type: string
- *                     credit:
- *                       type: integer
+ *                 teamId:
+ *                   type: integer
+ *                   description: 팀 ID
+ *                   example: 1
+ *                 teamName:
+ *                   type: string
+ *                   description: 팀 이름
+ *                   example: 아라
+ *                 credit:
+ *                   type: integer
+ *                   description: 팀 크레딧
+ *                   example: 3000
+ *                 members:
+ *                   type: array
+ *                   description: 팀원 목록
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: integer
+ *                         description: 학생 ID
+ *                         example: 1
+ *                       name:
+ *                         type: string
+ *                         description: 학생 이름
+ *                         example: 홍길동
+ *                       userNumber:
+ *                         type: string
+ *                         description: 학번
+ *                         example: "1201"
  *       401:
  *         description: 인증 실패
  */

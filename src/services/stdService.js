@@ -353,10 +353,19 @@ export const stdService = {
             throw { status: 404, message: '해당 팀은 존재하지 않습니다.', code: 'NON_EXIST_TEAM' };
         }
 
+        // 3. 팀원 정보 조회
+        const members = teamModel.getTeamMembers(team.id);
+        const memberList = members.map(member => ({
+            id: member.id,
+            name: member.name,
+            userNumber: member.user_number
+        }));
+
         return {
             teamId: team.id,
             teamName: team.name,
-            credit: team.team_credit
+            credit: team.team_credit,
+            members: memberList
         };
     }
 };
