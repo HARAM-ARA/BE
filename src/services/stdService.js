@@ -361,10 +361,14 @@ export const stdService = {
             userNumber: member.user_number
         }));
 
+        // 4. 팀장 ID 조회
+        const leaderId = teamModel.getLeader(team.id);
+
         return {
             teamId: team.id,
             teamName: team.name,
             credit: team.team_credit,
+            leaderId: leaderId,
             members: memberList
         };
     }

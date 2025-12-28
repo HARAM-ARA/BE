@@ -36,6 +36,11 @@ const router = express.Router();
  *                   type: integer
  *                   description: 팀 크레딧
  *                   example: 3000
+ *                 leaderId:
+ *                   type: integer
+ *                   nullable: true
+ *                   description: 팀장 ID (없으면 null)
+ *                   example: 1
  *                 members:
  *                   type: array
  *                   description: 팀원 목록
