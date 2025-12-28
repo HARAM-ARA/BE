@@ -52,3 +52,17 @@ export function broadcastNewNotice(notice) {
   io.emit('notice:created', notice);
   console.log(`[Socket.IO] Broadcasted notice:created - ID: ${notice.noticeId}`);
 }
+
+/**
+ * 새 음악 신청 브로드캐스트
+ * @param {Object} music - 음악 데이터
+ */
+export function broadcastNewMusic(music) {
+  if (!io) {
+    console.warn('[Socket.IO] Cannot broadcast: Socket.IO not initialized');
+    return;
+  }
+
+  io.emit('music:requested', music);
+  console.log(`[Socket.IO] Broadcasted music:requested - ID: ${music.queueId}`);
+}

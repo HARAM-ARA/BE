@@ -2,6 +2,7 @@ import ytdl from '@distube/ytdl-core';
 import { musicModel } from '../models/musicModel.js';
 import { teamModel } from '../models/teamModel.js';
 import { AppError } from '../middlewares/errorHandler.js';
+import { broadcastNewMusic } from '../config/socket.js';
 
 export const musicService = {
   // YouTube URL에서 제목 추출
@@ -56,7 +57,7 @@ export const musicService = {
     // 7. 권한 차감
     teamModel.decrementMusicRequestCount(teamId);
 
-    return {
+    const result = {
       message: '음악이 신청되었습니다.',
       queueId,
       title,
@@ -64,6 +65,16 @@ export const musicService = {
       requesterId: user.id,
       teamId: teamId
     };
+
+    // 8. 소켓 이벤트 발송
+    broadcastNewMusic({
+      queueId,
+      title,
+      url: youtubeUrl,
+      teamId: teamId
+    });
+
+    return result;
   },
 
   // 큐 조회 (URL, 제목, 신청팀 ID 반환)
