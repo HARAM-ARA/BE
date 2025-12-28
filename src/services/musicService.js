@@ -45,12 +45,10 @@ export const musicService = {
     // 5. YouTube 제목 추출
     const title = await this.getYoutubeTitle(youtubeUrl);
 
-    // 6. 큐에 추가 (이름과 ID 모두 저장)
+    // 6. 큐에 추가 (ID만 사용)
     const queueId = musicModel.addToQueue(
       youtubeUrl,
       title,
-      user.name,
-      team.name,
       user.id,
       teamId
     );

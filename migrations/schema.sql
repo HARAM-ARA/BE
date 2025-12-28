@@ -52,8 +52,6 @@ CREATE TABLE IF NOT EXISTS music_queue (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   youtube_url TEXT NOT NULL,
   title TEXT NOT NULL,
-  requester_name TEXT NOT NULL,
-  requester_team_name TEXT NOT NULL,
   requester_id INTEGER,
   requester_team_id INTEGER,
   requested_at DATETIME DEFAULT CURRENT_TIMESTAMP
