@@ -3,6 +3,7 @@ import { getTeams } from '../controllers/teamController.js';
 import { storeController } from '../controllers/storeController.js';
 import { getAccount } from '../controllers/tchController.js';
 import { postNotice, getNotices } from '../controllers/noticeController.js';
+import { musicController } from '../controllers/musicController.js';
 import { authenticateToken } from '../middlewares/auth.js';
 
 const router = express.Router();
@@ -330,5 +331,43 @@ router.get('/store/:type', storeController.getItemsByType);
  */
 router.get('/notice', getNotices);
 router.post('/notice', authenticateToken, postNotice);
+
+/**
+ * @swagger
+ * /haram/music/queue:
+ *   get:
+ *     summary: 음악 신청 큐 조회 (인증 불필요)
+ *     tags: [Music]
+ *     responses:
+ *       200:
+ *         description: 음악 큐 조회 성공
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 queue:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: integer
+ *                         description: 큐 ID
+ *                         example: 1
+ *                       url:
+ *                         type: string
+ *                         description: YouTube URL
+ *                         example: https://www.youtube.com/watch?v=dQw4w9WgXcQ
+ *                       title:
+ *                         type: string
+ *                         description: 영상 제목
+ *                         example: Never Gonna Give You Up
+ *                       team:
+ *                         type: string
+ *                         description: 신청 팀 이름
+ *                         example: 아라
+ */
+router.get('/music/queue', musicController.getQueue);
 
 export default router;

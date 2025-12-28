@@ -12,6 +12,7 @@ import {
 } from '../controllers/tchController.js';
 import { appendStudents, getTeam, addSingleStudent, createTeam, getTeamStudents, deleteTeam, downloadStudentExcel } from '../controllers/teamController.js';
 import { getAllStudents } from '../controllers/userController.js';
+import { musicController } from '../controllers/musicController.js';
 import { authenticateToken, requireTeacher } from '../middlewares/auth.js';
 import { upload, validateImageSize } from '../middlewares/upload.js';
 
@@ -909,5 +910,53 @@ router.delete('/team/:id', authenticateToken, requireTeacher, deleteTeam);
  *         description: 서버 오류
  */
 router.get('/excel/students', authenticateToken, requireTeacher, downloadStudentExcel);
+
+/**
+ * @swagger
+ * /tch/music/stream/{id}:
+ *   get:
+ *     summary: 음악 스트리밍 (교사 전용)
+ *     description: ID를 지정하면 해당 곡을 재생하고, ID가 없으면 큐의 맨 앞 곡을 재생합니다. 재생된 곡은 큐에서 제거됩니다.
+ *     tags: [Music]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: false
+ *         schema:
+ *           type: integer
+ *         description: 큐 ID (없으면 맨 앞 곡 재생)
+ *     responses:
+ *       200:
+ *         description: 음악 스트리밍 성공
+ *         headers:
+ *           Content-Type:
+ *             schema:
+ *               type: string
+ *               example: audio/mpeg
+ *           X-Music-Title:
+ *             schema:
+ *               type: string
+ *               description: 음악 제목 (URL 인코딩됨)
+ *           X-Music-Requester:
+ *             schema:
+ *               type: string
+ *               description: 신청자 이름 (URL 인코딩됨)
+ *           X-Music-Team:
+ *             schema:
+ *               type: string
+ *               description: 신청 팀 이름 (URL 인코딩됨)
+ *         content:
+ *           audio/mpeg:
+ *             schema:
+ *               type: string
+ *               format: binary
+ *       404:
+ *         description: 큐에 음악이 없거나 해당 ID를 찾을 수 없음
+ *       500:
+ *         description: 스트리밍 중 오류 발생
+ */
+router.get('/music/stream/:id?', authenticateToken, requireTeacher, musicController.streamMusic);
 
 export default router;

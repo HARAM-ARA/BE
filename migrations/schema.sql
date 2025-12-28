@@ -32,6 +32,7 @@ CREATE TABLE IF NOT EXISTS teams (
   steal_percent INTEGER DEFAULT 0,
   notice_count INTEGER DEFAULT 0,
   leader_id INTEGER DEFAULT NULL,
+  music_request_count INTEGER DEFAULT 0,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   UNIQUE(team_number, class_number)
@@ -47,10 +48,20 @@ CREATE TABLE IF NOT EXISTS notices (
   updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE IF NOT EXISTS music_queue (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  youtube_url TEXT NOT NULL,
+  title TEXT NOT NULL,
+  requester_name TEXT NOT NULL,
+  requester_team_name TEXT NOT NULL,
+  requested_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
 CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
 CREATE INDEX IF NOT EXISTS idx_users_user_number ON users(user_number);
 CREATE INDEX IF NOT EXISTS idx_users_google_id ON users(google_id);
 CREATE INDEX IF NOT EXISTS idx_stores_teacher_id ON stores(teacher_id);
+CREATE INDEX IF NOT EXISTS idx_music_queue_requested_at ON music_queue(requested_at);
 
 CREATE TRIGGER IF NOT EXISTS update_users_timestamp
 AFTER UPDATE ON users

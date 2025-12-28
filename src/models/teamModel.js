@@ -340,6 +340,26 @@ export const teamModel = {
     return result ? result.leader_id : null;
   },
 
+  // === 음악 신청 권한 관리 ===
+  getMusicRequestCount(teamId) {
+    const db = getDatabase();
+    const stmt = db.prepare('SELECT music_request_count FROM teams WHERE id = ?');
+    const result = stmt.get(teamId);
+    return result ? result.music_request_count : 0;
+  },
+
+  incrementMusicRequestCount(teamId) {
+    const db = getDatabase();
+    const stmt = db.prepare('UPDATE teams SET music_request_count = music_request_count + 1 WHERE id = ?');
+    return stmt.run(teamId);
+  },
+
+  decrementMusicRequestCount(teamId) {
+    const db = getDatabase();
+    const stmt = db.prepare('UPDATE teams SET music_request_count = music_request_count - 1 WHERE id = ? AND music_request_count > 0');
+    return stmt.run(teamId);
+  },
+
   // === 팀 삭제 ===
   deleteTeam(teamId) {
     const db = getDatabase();

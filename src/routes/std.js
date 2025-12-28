@@ -2,6 +2,7 @@ import express from 'express';
 import { stdController } from '../controllers/stdController.js';
 import { typingController } from '../controllers/typingController.js';
 import { enforceController } from '../controllers/enforceController.js';
+import { musicController } from '../controllers/musicController.js';
 import { authenticateToken, requireStudent } from '../middlewares/auth.js';
 
 const router = express.Router();
@@ -537,5 +538,61 @@ router.post('/team/leader', authenticateToken, requireStudent, stdController.set
  *         description: 팀에 소속되어 있지 않음
  */
 router.get('/team', authenticateToken, requireStudent, stdController.getMyTeam);
+
+/**
+ * @swagger
+ * /std/music/request:
+ *   post:
+ *     summary: 음악 신청 (학생 전용)
+ *     tags: [Music]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - url
+ *             properties:
+ *               url:
+ *                 type: string
+ *                 description: YouTube URL
+ *                 example: https://www.youtube.com/watch?v=dQw4w9WgXcQ
+ *     responses:
+ *       200:
+ *         description: 음악 신청 성공
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: 음악이 신청되었습니다.
+ *                 queueId:
+ *                   type: integer
+ *                   example: 1
+ *                 title:
+ *                   type: string
+ *                   example: Never Gonna Give You Up
+ *                 youtubeUrl:
+ *                   type: string
+ *                   example: https://www.youtube.com/watch?v=dQw4w9WgXcQ
+ *                 requester:
+ *                   type: string
+ *                   example: 홍길동
+ *                 team:
+ *                   type: string
+ *                   example: 아라
+ *       400:
+ *         description: 잘못된 요청 (URL 누락 또는 잘못된 형식)
+ *       403:
+ *         description: 권한 부족 (팀 미소속 또는 신청 권한 없음)
+ *       404:
+ *         description: 팀 정보를 찾을 수 없음
+ */
+router.post('/music/request', authenticateToken, requireStudent, musicController.requestMusic);
 
 export default router;

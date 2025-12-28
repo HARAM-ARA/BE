@@ -211,6 +211,11 @@ export const storeService = {
         teamModel.incrementNoticeCount(teamId);
       }
 
+      // id가 998인 물건 구매 시 music_request_count 증가
+      if (itemId === 998) {
+        teamModel.incrementMusicRequestCount(teamId);
+      }
+
       return newCredit;
     });
 
