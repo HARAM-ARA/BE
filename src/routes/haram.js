@@ -363,10 +363,10 @@ router.post('/notice', authenticateToken, postNotice);
  *                         type: string
  *                         description: 영상 제목
  *                         example: Never Gonna Give You Up
- *                       team:
- *                         type: string
- *                         description: 신청 팀 이름
- *                         example: 아라
+ *                       teamId:
+ *                         type: integer
+ *                         description: 신청 팀 ID
+ *                         example: 1
  */
 router.get('/music/queue', musicController.getQueue);
 

@@ -599,12 +599,14 @@ router.get('/team', authenticateToken, requireStudent, stdController.getMyTeam);
  *                 youtubeUrl:
  *                   type: string
  *                   example: https://www.youtube.com/watch?v=dQw4w9WgXcQ
- *                 requester:
- *                   type: string
- *                   example: 홍길동
- *                 team:
- *                   type: string
- *                   example: 아라
+ *                 requesterId:
+ *                   type: integer
+ *                   description: 신청자 ID
+ *                   example: 1
+ *                 teamId:
+ *                   type: integer
+ *                   description: 팀 ID
+ *                   example: 1
  *       400:
  *         description: 잘못된 요청 (URL 누락 또는 잘못된 형식)
  *       403:

@@ -2,13 +2,13 @@ import { getDatabase } from './db.js';
 
 export const musicModel = {
   // 큐에 음악 추가
-  addToQueue(youtubeUrl, title, requesterName, requesterTeamName) {
+  addToQueue(youtubeUrl, title, requesterName, requesterTeamName, requesterId, requesterTeamId) {
     const db = getDatabase();
     const stmt = db.prepare(`
-      INSERT INTO music_queue (youtube_url, title, requester_name, requester_team_name)
-      VALUES (?, ?, ?, ?)
+      INSERT INTO music_queue (youtube_url, title, requester_name, requester_team_name, requester_id, requester_team_id)
+      VALUES (?, ?, ?, ?, ?, ?)
     `);
-    const result = stmt.run(youtubeUrl, title, requesterName, requesterTeamName);
+    const result = stmt.run(youtubeUrl, title, requesterName, requesterTeamName, requesterId, requesterTeamId);
     return result.lastInsertRowid;
   },
 
@@ -16,7 +16,7 @@ export const musicModel = {
   getQueue() {
     const db = getDatabase();
     const stmt = db.prepare(`
-      SELECT id, youtube_url, title, requester_name, requester_team_name, requested_at
+      SELECT id, youtube_url, title, requester_name, requester_team_name, requester_id, requester_team_id, requested_at
       FROM music_queue
       ORDER BY requested_at ASC, id ASC
     `);
@@ -27,7 +27,7 @@ export const musicModel = {
   getById(id) {
     const db = getDatabase();
     const stmt = db.prepare(`
-      SELECT id, youtube_url, title, requester_name, requester_team_name, requested_at
+      SELECT id, youtube_url, title, requester_name, requester_team_name, requester_id, requester_team_id, requested_at
       FROM music_queue
       WHERE id = ?
     `);
@@ -38,7 +38,7 @@ export const musicModel = {
   getFirstInQueue() {
     const db = getDatabase();
     const stmt = db.prepare(`
-      SELECT id, youtube_url, title, requester_name, requester_team_name, requested_at
+      SELECT id, youtube_url, title, requester_name, requester_team_name, requester_id, requester_team_id, requested_at
       FROM music_queue
       ORDER BY requested_at ASC, id ASC
       LIMIT 1

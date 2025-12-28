@@ -45,12 +45,14 @@ export const musicService = {
     // 5. YouTube 제목 추출
     const title = await this.getYoutubeTitle(youtubeUrl);
 
-    // 6. 큐에 추가
+    // 6. 큐에 추가 (이름과 ID 모두 저장)
     const queueId = musicModel.addToQueue(
       youtubeUrl,
       title,
       user.name,
-      team.name
+      team.name,
+      user.id,
+      teamId
     );
 
     // 7. 권한 차감
@@ -61,19 +63,19 @@ export const musicService = {
       queueId,
       title,
       youtubeUrl,
-      requester: user.name,
-      team: team.name
+      requesterId: user.id,
+      teamId: teamId
     };
   },
 
-  // 큐 조회 (URL, 제목, 신청팀만 반환)
+  // 큐 조회 (URL, 제목, 신청팀 ID 반환)
   getQueue() {
     const queue = musicModel.getQueue();
     return queue.map(item => ({
       id: item.id,
       url: item.youtube_url,
       title: item.title,
-      team: item.requester_team_name
+      teamId: item.requester_team_id
     }));
   },
 
