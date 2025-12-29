@@ -1,6 +1,7 @@
 import jwt from 'jsonwebtoken';
 import { config } from '../config/index.js';
 import { userModel } from '../models/userModel.js';
+import { updateUserCache } from '../middlewares/logger.js';
 
 export async function exchangeCodeForToken(code) {
   const tokenEndpoint = 'https://oauth2.googleapis.com/token';
@@ -88,6 +89,9 @@ export async function authenticateWithGoogle(code) {
     });
 
     user = userModel.findById(userId);
+
+    // 새 사용자 캐시에 추가
+    updateUserCache(user.id, user.name);
   }
 
   const token = generateJWT(user);

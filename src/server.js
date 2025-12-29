@@ -17,7 +17,7 @@ import { purchaseModel } from './models/purchaseModel.js';
 import { enforceModel } from './models/enforceModel.js';
 import { typingService } from './services/typingService.js';
 import { cspMiddleware } from './middlewares/csp.js';
-import { requestLogger } from './middlewares/logger.js';
+import { requestLogger, initUserCache } from './middlewares/logger.js';
 import { errorHandler, notFoundHandler } from './middlewares/errorHandler.js';
 import authRoutes from './routes/auth.js';
 import tchRoutes from './routes/tch.js';
@@ -85,6 +85,9 @@ purchaseModel.initPurchases();
 
 // 강화 시스템 초기화
 enforceModel.initEnforce();
+
+// 사용자 캐시 초기화
+initUserCache();
 
 // HTTP 서버 생성 및 Socket.IO 초기화
 const httpServer = createServer(app);
