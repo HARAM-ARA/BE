@@ -17,6 +17,7 @@ import { purchaseModel } from './models/purchaseModel.js';
 import { enforceModel } from './models/enforceModel.js';
 import { typingService } from './services/typingService.js';
 import { cspMiddleware } from './middlewares/csp.js';
+import { requestLogger } from './middlewares/logger.js';
 import { errorHandler, notFoundHandler } from './middlewares/errorHandler.js';
 import authRoutes from './routes/auth.js';
 import tchRoutes from './routes/tch.js';
@@ -50,6 +51,7 @@ if (config.nodeEnv === 'development') {
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
+app.use(requestLogger);
 app.use(cspMiddleware);
 
 // 정적 파일 서빙 (이미지 업로드)
