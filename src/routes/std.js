@@ -3,6 +3,7 @@ import { stdController } from '../controllers/stdController.js';
 import { typingController } from '../controllers/typingController.js';
 import { enforceController } from '../controllers/enforceController.js';
 import { musicController } from '../controllers/musicController.js';
+import { casinoController } from '../controllers/casinoController.js';
 import { authenticateToken, requireStudent } from '../middlewares/auth.js';
 
 const router = express.Router();
@@ -620,5 +621,47 @@ router.get('/team', authenticateToken, requireStudent, stdController.getMyTeam);
  *         description: 팀 정보를 찾을 수 없음
  */
 router.post('/music/request', authenticateToken, requireStudent, musicController.requestMusic);
+
+/**
+ * @swagger
+ * /std/casino:
+ *   post:
+ *     summary: 카지노 플레이 (학생 전용)
+ *     tags: [Casino]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: 카지노 플레이 성공
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: 당첨되었습니다!
+ *                 slots:
+ *                   type: array
+ *                   items:
+ *                     type: integer
+ *                   description: 3개의 슬롯 결과 (1~5)
+ *                   example: [3, 3, 3]
+ *                 reward:
+ *                   type: integer
+ *                   description: 획득한 크레딧 (당첨되지 않으면 0)
+ *                   example: 3000
+ *                 credit:
+ *                   type: integer
+ *                   description: 현재 팀 크레딧
+ *                   example: 5000
+ *       400:
+ *         description: 크레딧 부족 (1000 크레딧 필요)
+ *       403:
+ *         description: 팀에 소속되어 있지 않음
+ *       404:
+ *         description: 팀 정보를 찾을 수 없음
+ */
+router.post('/casino', authenticateToken, requireStudent, casinoController.playCasino);
 
 export default router;
