@@ -4,6 +4,7 @@ import { storeController } from '../controllers/storeController.js';
 import { getAccount } from '../controllers/tchController.js';
 import { postNotice, getNotices } from '../controllers/noticeController.js';
 import { musicController } from '../controllers/musicController.js';
+import { haramController } from '../controllers/haramController.js';
 import { authenticateToken } from '../middlewares/auth.js';
 
 const router = express.Router();
@@ -369,5 +370,40 @@ router.post('/notice', authenticateToken, postNotice);
  *                         example: 1
  */
 router.get('/music/queue', musicController.getQueue);
+
+/**
+ * @swagger
+ * /haram/board:
+ *   get:
+ *     summary: 뽑기판 상태 조회 (인증 불필요)
+ *     tags: [Board]
+ *     responses:
+ *       200:
+ *         description: 뽑기판 상태 조회 성공
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 cards:
+ *                   type: array
+ *                   items:
+ *                     type: boolean
+ *                   description: 카드 뽑힘 여부 배열 (인덱스 0 = 카드 1번, 인덱스 99 = 카드 100번)
+ *                   example: [true, false, true, false, true]
+ *                 pulledCount:
+ *                   type: integer
+ *                   description: 뽑힌 카드 수
+ *                   example: 42
+ *                 totalCards:
+ *                   type: integer
+ *                   description: 전체 카드 수
+ *                   example: 100
+ *                 isFull:
+ *                   type: boolean
+ *                   description: 모든 카드가 뽑혔는지 여부
+ *                   example: false
+ */
+router.get('/board', haramController.getBoardStatus);
 
 export default router;

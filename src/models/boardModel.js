@@ -57,5 +57,10 @@ export const boardModel = {
     const db = getDatabase();
     const unpulledCount = db.prepare('SELECT COUNT(*) as count FROM pull_board WHERE is_pulled = 0').get().count;
     return unpulledCount === 0;
+  },
+
+  getAllCards() {
+    const db = getDatabase();
+    return db.prepare('SELECT * FROM pull_board ORDER BY card_number').all();
   }
 };
