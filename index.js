@@ -159,6 +159,34 @@ app.get('/haram/auth/logout', (req, res) => {
   }
 });
 
+app.get('/haram/auth/profile', (req, res) => {
+  if (!req.auth || !req.auth.userEmail) {
+    return res.status(403).json({ success: false, message: 'NOT_AUTHENTICATED' });
+  }
+
+  try {
+    const user = db.prepare('SELECT id, email, name, role FROM users WHERE email = ?').get(req.auth.userEmail);
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'USER_NOT_FOUND' });
+    }
+
+    res.json({
+      success: true,
+      data: {
+        user: {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          role: user.role
+        }
+      }
+    });
+  } catch (err) {
+    console.error('Error in /haram/auth/profile:', err);
+    res.status(500).json({ success: false, message: 'INTERNAL_ERROR' });
+  }
+});
+
 app.post('/tch/store', async (req, res) => {
   if (!req.auth || !req.auth.userEmail) {
     return res.status(403).json({ error: 'FORBIDDEN', message: '접근 권한이 부족합니다.' });
@@ -238,6 +266,124 @@ app.post('/tch/store', async (req, res) => {
   } catch (err) {
     console.error('Error in /tch/store:', err);
     return res.status(400).json({ error: 'BAD_REQUEST', message: '잘못된 요청입니다.' });
+  }
+});
+
+// 선생님용: 팀별 구매한 물품 조회 API
+app.get('/tch/purchases/:teamId', (req, res) => {
+  if (!req.auth || !req.auth.userEmail) {
+    return res.status(403).json({ error: 'FORBIDDEN', message: '접근 권한이 부족합니다.' });
+  }
+
+  try {
+    const user = db.prepare('SELECT role FROM users WHERE email = ?').get(req.auth.userEmail);
+    if (!user || user.role !== 'teacher') {
+      return res.status(403).json({ error: 'FORBIDDEN', message: '접근 권한이 부족합니다.' });
+    }
+
+    const { teamId } = req.params;
+    
+    if (!teamId || isNaN(teamId)) {
+      return res.status(400).json({ error: 'INVALID_TEAM_ID', message: '팀 ID가 잘못되었습니다.' });
+    }
+
+    // 팀 정보 확인
+    const team = db.prepare('SELECT * FROM teams WHERE id = ?').get(teamId);
+    if (!team) {
+      return res.status(404).json({ error: 'TEAM_NOT_FOUND', message: '팀을 찾을 수 없습니다.' });
+    }
+
+    // 팀의 구매 기록 조회 (물품 정보 포함)
+    const purchases = db.prepare(`
+      SELECT 
+        p.id,
+        p.quantity,
+        p.total_price,
+        p.purchased_at,
+        s.name as item_name,
+        s.price as unit_price,
+        s.image_url
+      FROM purchases p
+      JOIN stores s ON p.store_item_id = s.id
+      WHERE p.team_id = ?
+      ORDER BY p.purchased_at DESC
+    `).all(teamId);
+
+    res.json({
+      success: true,
+      data: {
+        team: {
+          id: team.id,
+          team_number: team.team_number,
+          class_number: team.class_number,
+          name: team.name,
+          team_credit: team.team_credit
+        },
+        purchases: purchases
+      }
+    });
+
+  } catch (err) {
+    console.error('Error in /tch/purchases/:teamId:', err);
+    res.status(500).json({ error: 'INTERNAL_ERROR', message: '서버 오류가 발생했습니다.' });
+  }
+});
+
+// 학생용: 우리 팀이 구매한 물품 조회 API
+app.get('/std/purchases', (req, res) => {
+  if (!req.auth || !req.auth.userEmail) {
+    return res.status(403).json({ error: 'FORBIDDEN', message: '접근 권한이 부족합니다.' });
+  }
+
+  try {
+    const user = db.prepare('SELECT id, role FROM users WHERE email = ?').get(req.auth.userEmail);
+    if (!user || user.role !== 'student') {
+      return res.status(403).json({ error: 'FORBIDDEN', message: '학생만 접근 가능합니다.' });
+    }
+
+    // 학생이 속한 팀 찾기
+    const team = db.prepare(`
+      SELECT * FROM teams 
+      WHERE JSON_EXTRACT(student_ids, '$') LIKE '%' || ? || '%'
+    `).get(user.id.toString());
+
+    if (!team) {
+      return res.status(404).json({ error: 'TEAM_NOT_FOUND', message: '소속된 팀을 찾을 수 없습니다.' });
+    }
+
+    // 팀의 구매 기록 조회 (물품 정보 포함)
+    const purchases = db.prepare(`
+      SELECT 
+        p.id,
+        p.quantity,
+        p.total_price,
+        p.purchased_at,
+        s.name as item_name,
+        s.price as unit_price,
+        s.image_url
+      FROM purchases p
+      JOIN stores s ON p.store_item_id = s.id
+      WHERE p.team_id = ?
+      ORDER BY p.purchased_at DESC
+    `).all(team.id);
+
+    res.json({
+      success: true,
+      data: {
+        team: {
+          id: team.id,
+          team_number: team.team_number,
+          class_number: team.class_number,
+          name: team.name,
+          team_credit: team.team_credit
+        },
+        purchases: purchases
+      }
+    });
+
+  } catch (err) {
+    console.error('Error in /std/purchases:', err);
+    res.status(500).json({ error: 'INTERNAL_ERROR', message: '서버 오류가 발생했습니다.' });
   }
 });
 

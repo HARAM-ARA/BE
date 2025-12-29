@@ -40,6 +40,10 @@
 - **DELETE `/tch/store/:id`**: Delete a store.
 - **POST `/tch/store/upload`**: Upload store image.
 
+### Purchases
+- **GET `/tch/purchases/:teamId`**: Get team's purchase history.
+    - Response: `{ "success": true, "data": { "team": {...}, "purchases": [...] } }`
+
 ### Student & Team
 - **GET `/tch/student`**: Get all students.
 - **POST `/tch/append`**: Bulk register students/teams via Google Sheet.
@@ -88,6 +92,10 @@
 ### Store
 - **POST `/std/store`**: Purchase item.
     - Body: `{ "itemId": integer, "quantity": integer }`
+
+### Purchases
+- **GET `/std/purchases`**: Get my team's purchase history.
+    - Response: `{ "success": true, "data": { "team": {...}, "purchases": [...] } }`
 
 ### Enforce (Upgrade System)
 - **GET `/std/enforce/data`**: Get enforcement data.
