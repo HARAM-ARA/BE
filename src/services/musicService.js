@@ -1,15 +1,21 @@
-import ytdl from '@distube/ytdl-core';
+import { exec } from 'child_process';
+import { promisify } from 'util';
 import { musicModel } from '../models/musicModel.js';
 import { teamModel } from '../models/teamModel.js';
 import { AppError } from '../middlewares/errorHandler.js';
 import { broadcastNewMusic } from '../config/socket.js';
 
+const execAsync = promisify(exec);
+
 export const musicService = {
   // YouTube URL에서 제목 추출
   async getYoutubeTitle(youtubeUrl) {
     try {
-      const info = await ytdl.getInfo(youtubeUrl);
-      return info.videoDetails.title;
+      const { stdout } = await execAsync(
+        `yt-dlp --get-title "${youtubeUrl}"`,
+        { timeout: 10000 }
+      );
+      return stdout.trim();
     } catch (error) {
       console.error('Failed to get YouTube title:', error);
       throw new AppError('YouTube 영상 정보를 가져올 수 없습니다.', 400);

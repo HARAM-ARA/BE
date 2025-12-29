@@ -1,5 +1,5 @@
 import { musicService } from '../services/musicService.js';
-import ytdl from '@distube/ytdl-core';
+import { spawn } from 'child_process';
 
 export const musicController = {
   // 음악 신청 (학생)
@@ -40,25 +40,33 @@ export const musicController = {
       // 스트리밍할 음악 정보 가져오기 (큐에서 제거됨)
       const music = await musicService.getMusicForStreaming(musicId);
 
+      // yt-dlp를 사용해서 MP3로 스트리밍
+      const ytdlp = spawn('yt-dlp', [
+        '-f', 'bestaudio',
+        '-x',
+        '--audio-format', 'mp3',
+        '--audio-quality', '0',
+        '-o', '-',
+        music.youtube_url
+      ]);
+
       // 응답 헤더 설정
-      res.setHeader('Content-Type', 'audio/webm');
-      res.setHeader('Content-Disposition', `inline; filename="${encodeURIComponent(music.title)}.webm"`);
+      res.setHeader('Content-Type', 'audio/mpeg');
+      res.setHeader('Content-Disposition', `inline; filename="${encodeURIComponent(music.title)}.mp3"`);
       res.setHeader('X-Music-Title', encodeURIComponent(music.title));
-      res.setHeader('X-Music-Requester', encodeURIComponent(music.requester_name));
-      res.setHeader('X-Music-Team', encodeURIComponent(music.requester_team_name));
+      res.setHeader('X-Music-Requester', String(music.requester_id || ''));
+      res.setHeader('X-Music-Team', String(music.requester_team_id || ''));
 
-      // ytdl-core를 사용해서 오디오 스트리밍
-      const stream = ytdl(music.youtube_url, {
-        filter: 'audioonly',
-        quality: 'highestaudio',
-      });
-
-      // 스트림을 응답으로 파이프
-      stream.pipe(res);
+      // yt-dlp stdout을 응답으로 파이프
+      ytdlp.stdout.pipe(res);
 
       // 에러 처리
-      stream.on('error', (error) => {
-        console.error('ytdl-core stream error:', error);
+      ytdlp.stderr.on('data', (data) => {
+        console.error('yt-dlp stderr:', data.toString());
+      });
+
+      ytdlp.on('error', (error) => {
+        console.error('yt-dlp process error:', error);
         if (!res.headersSent) {
           res.status(500).json({
             code: 'STREAM_ERROR',
@@ -67,9 +75,15 @@ export const musicController = {
         }
       });
 
-      // 클라이언트가 연결을 끊으면 스트림 종료
+      ytdlp.on('close', (code) => {
+        if (code !== 0) {
+          console.error(`yt-dlp exited with code ${code}`);
+        }
+      });
+
+      // 클라이언트가 연결을 끊으면 프로세스 종료
       req.on('close', () => {
-        stream.destroy();
+        ytdlp.kill();
       });
 
     } catch (error) {
